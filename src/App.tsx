@@ -165,6 +165,12 @@ export default function App() {
   const [trendingData, setTrendingData] =
     useState<RankingItem[]>(GITHUB_TRENDING_MOCK);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const currentIndexRef = useRef(0);
+
+  const updateCurrentIndex = (index: number) => {
+    setCurrentIndex(index);
+    currentIndexRef.current = index;
+  };
   const [layoutMode, setLayoutMode] = useState<"index" | "detail">("index");
   const [isAiGenerating, setIsAiGenerating] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<string>(
@@ -273,7 +279,7 @@ export default function App() {
     const item = trendingData[index];
     if (!item) return;
 
-    setCurrentIndex(index);
+    updateCurrentIndex(index);
     setProjectName(item.title);
     setProjectUrl(item.url || "");
     setStars(item.stars || "");
@@ -288,18 +294,67 @@ export default function App() {
     setLoading(true);
     setIsProcessing(true);
     setProcessProgress(0);
+    setStatusMsg("正在获取 GitHub Trending 列表...");
     try {
       const response = await fetch("/api/trending");
       if (!response.ok) throw new Error("Failed to fetch");
       const data: RankingItem[] = await response.json();
 
-      const processedData: RankingItem[] = [...data];
-      setProcessProgress(100);
+      setTrendingData(data);
+      // Initialize view with first project
+      if (data.length > 0) {
+        const firstItem = data[0];
+        setProjectName(firstItem.title);
+        setProjectUrl(firstItem.url || "");
+        setStars(firstItem.stars || "");
+        setStarsToday(firstItem.starsToday || "");
+        setContent(firstItem.content);
+        setHighlightWords(firstItem.keywords);
+      }
 
+      // Sequential AI processing
+      const processedData = [...data];
+      for (let i = 0; i < processedData.length; i++) {
+        const item = processedData[i];
+        const progress = Math.round(((i) / processedData.length) * 100);
+        setProcessProgress(progress);
+        setStatusMsg(`正在生成 AI 摘要 (${i + 1}/${processedData.length}): ${item.title}`);
+
+        try {
+          const [owner, repo] = item.title.split("/");
+          const aiRes = await fetch(`/api/process-readme?owner=${owner}&repo=${repo}`);
+          if (aiRes.ok) {
+            const aiData = await aiRes.json();
+            processedData[i] = {
+              ...item,
+              aiSummary: aiData.summary,
+              aiKeywords: aiData.keywords,
+            };
+          } else {
+            console.warn(`[AI] Failed to process ${item.title}, using fallback.`);
+            processedData[i] = { ...item, aiSummary: item.content, aiKeywords: item.keywords };
+          }
+        } catch (err) {
+          console.error(`[AI] Error processing ${item.title}:`, err);
+          processedData[i] = { ...item, aiSummary: item.content, aiKeywords: item.keywords };
+        }
+
+        // Update state incrementally
+        setTrendingData([...processedData]);
+
+        // If user is currently looking at this project, update the view immediately
+        if (currentIndexRef.current === i) {
+          setContent(processedData[i].aiSummary || processedData[i].content);
+          setHighlightWords(processedData[i].aiKeywords || processedData[i].keywords);
+        }
+      }
+
+      setProcessProgress(100);
       setTrendingData(processedData);
 
-      // Generate Global Summary
+      // Generate Global Summary using the processed data
       try {
+        setStatusMsg("正在生成今日趋势大总结...");
         const gsRes = await fetch("/api/global-summary", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -312,16 +367,6 @@ export default function App() {
       } catch (err: any) {
         console.error("[AI] Error generating global summary:", err?.message || err);
       }
-
-      // Apply the first project with its AI content
-      const firstItem = processedData[0];
-      setCurrentIndex(0);
-      setProjectName(firstItem.title);
-      setProjectUrl(firstItem.url || "");
-      setStars(firstItem.stars || "");
-      setStarsToday(firstItem.starsToday || "");
-      setContent(firstItem.aiSummary || firstItem.content);
-      setHighlightWords(firstItem.aiKeywords || firstItem.keywords);
 
       setStatusMsg("已同步并处理完成所有 GitHub Trending 数据！");
       setTimeout(() => setStatusMsg(null), 3000);
@@ -376,8 +421,13 @@ export default function App() {
     setLoading(true);
     setStatusMsg("正在批量生成图片…");
     try {
+      const now = new Date();
+      const pad = (n: number) => String(n).padStart(2, "0");
+      const ts = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}`;
+      const folderName = `github-trending-${ts}`;
+
       const zip = new JSZip();
-      const folder = zip.folder("social-cards");
+      const folder = zip.folder(folderName);
       if (!folder) throw new Error("Failed to create zip folder");
 
       // Helper to capture current preview
@@ -412,11 +462,8 @@ export default function App() {
       applyProject(originalIndex);
       setLayoutMode(originalMode);
 
-      const now = new Date();
-      const pad = (n: number) => String(n).padStart(2, "0");
-      const ts = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}`;
       const zipBlob = await zip.generateAsync({ type: "blob" });
-      download(zipBlob, `github-trending-${ts}.zip`);
+      download(zipBlob, `${folderName}.zip`);
       setStatusMsg("导出完成！");
       setTimeout(() => setStatusMsg(null), 3000);
     } catch (error) {
@@ -743,17 +790,17 @@ export default function App() {
                             <div className="text-sm font-bold tracking-tighter opacity-30 mb-1">
                               标签
                             </div>
-                            <div className="tmp-my-3 flex flex-wrap gap-2">
+                            <div className="tmp-my-3 flex flex-wrap gap-1">
                               {displayTags.map((tag, i) => (
                                 <span
                                   key={i}
-                                  className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[9px] font-bold uppercase tracking-wider opacity-60"
+                                  className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-xs font-bold uppercase tracking-wider opacity-60"
                                 >
                                   {tag}
                                 </span>
                               ))}
                               {hasMore && (
-                                <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[9px] font-bold uppercase tracking-wider opacity-60">
+                                <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-xs font-bold uppercase tracking-wider opacity-60">
                                   ……
                                 </span>
                               )}
@@ -794,16 +841,16 @@ export default function App() {
                       {trendingData.map((item, idx) => (
                         <div
                           key={item.id}
-                          className="flex items-center gap-4 group"
+                          className="flex items-center gap-3 group"
                         >
-                          <span className="w-6 text-sm font-mono opacity-20 font-black">
+                          <span className="w-6 text-base font-mono opacity-20 font-black">
                             {(idx + 1).toString().padStart(2, "0")}
                           </span>
-                          <span className="flex-1 text-sm font-bold tracking-tight truncate">
+                          <span className="flex-1 text-base font-bold tracking-tight truncate">
                             {item.title}
                           </span>
                           <span
-                            className="text-xs font-mono font-black"
+                            className="text-sm font-mono font-black"
                             style={{
                               color: idx < 3 ? theme.accentColor : "inherit",
                               opacity: idx < 3 ? 1 : 0.3,
@@ -829,7 +876,7 @@ export default function App() {
                         src="/my-avatar.jpg"
                         alt="author"
                         crossOrigin="anonymous"
-                        className="w-10 h-10 rounded-full border-2 border-white/10 shadow-md object-cover"
+                        className="w-20 h-20 rounded-full border-2 border-white/10 shadow-md object-cover"
                         referrerPolicy="no-referrer"
                       />
                     </div>
@@ -868,14 +915,33 @@ export default function App() {
             </div>
           )}
 
-          <div className="mt-8 flex items-center gap-4 px-6 py-3 rounded-2xl bg-white/5 border border-white/5 backdrop-blur-sm">
-            <ImageIcon className="w-4 h-4 text-zinc-500" />
-            <p className="text-[11px] text-zinc-400 font-medium">
-              {statusMsg ||
-                (layoutMode === "index"
-                  ? "索引模式：展示今日 Top 15 项目概览。"
-                  : "详情模式：深度展示单个项目的核心数据与摘要。")}
-            </p>
+          <div className="mt-8 flex flex-col gap-3 px-6 py-4 rounded-2xl bg-white/5 border border-white/5 backdrop-blur-sm">
+            <div className="flex items-center gap-4">
+              <ImageIcon className="w-4 h-4 text-zinc-500" />
+              <p className="text-[11px] text-zinc-400 font-medium">
+                {statusMsg ||
+                  (layoutMode === "index"
+                    ? "索引模式：展示今日 Top 15 项目概览。"
+                    : "详情模式：深度展示单个项目的核心数据与摘要。")}
+              </p>
+            </div>
+            
+            {isProcessing && (
+              <div className="w-full space-y-2">
+                <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                  <motion.div 
+                    className="h-full bg-cyan-500"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${processProgress}%` }}
+                    transition={{ duration: 0.5 }}
+                  />
+                </div>
+                <div className="flex justify-between text-[10px] font-mono text-zinc-500 uppercase tracking-tight">
+                  <span>Progress</span>
+                  <span>{processProgress}%</span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </main>

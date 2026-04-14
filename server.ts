@@ -16,6 +16,71 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
+  async function fetchReadmeContent(owner: string, repo: string): Promise<string> {
+    const GITHUB_PAT = process.env.GITHUB_PAT;
+    const response = await axios.get(`https://api.github.com/repos/${owner}/${repo}/readme`, {
+      headers: {
+        ...(GITHUB_PAT ? { Authorization: `token ${GITHUB_PAT}` } : {}),
+        Accept: "application/vnd.github.v3.raw"
+      }
+    });
+    return response.data;
+  }
+
+  async function generateReadmeSummary(readmeText: string): Promise<{ summary: string, keywords: string }> {
+    const openai = new OpenAI({
+      apiKey: process.env.NVIDIA_API_KEY || "",
+      baseURL: "https://integrate.api.nvidia.com/v1",
+    });
+    const summarizePayload = {
+      model: "deepseek-ai/deepseek-v3.1",
+      messages: [
+        {
+          role: "system" as const,
+          content:
+            "You are a professional open-source project analyst. Always respond with valid JSON only, no markdown formatting, no code blocks.",
+        },
+        {
+          role: "user" as const,
+          content: `请根据以下 GitHub 项目的 README 内容，生成一个极其精炼、吸引人的中文摘要和一组关键词。
+
+要求：
+1. 摘要 (summary)：必须在 140 字以内，建议 80 字左右，专业且具有传播力。
+2. 关键词 (keywords)：必须是 **摘要内容中已经出现的词汇**，用逗号隔开。这些词将用于在前端高亮摘要，所以请务必确保它们完全匹配摘要中的字词。
+3. 语言：必须使用中文。
+
+README 内容：
+${readmeText.substring(0, 5000)}
+
+请以 JSON 格式返回：
+{
+  "summary": "这里是生成的中文摘要...",
+  "keywords": "关键词1,关键词2..."
+}`,
+        },
+      ],
+      temperature: 0.2,
+      top_p: 0.7,
+      max_tokens: 1000,
+    };
+    console.log(`curl -X POST https://integrate.api.nvidia.com/v1/chat/completions \\\n  -H "Authorization: Bearer $NVIDIA_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d '${JSON.stringify(summarizePayload)}'`);
+    const completion = await openai.chat.completions.create(summarizePayload);
+    const textBlock = completion.choices[0]?.message?.content || "";
+    let result: any = {};
+    try {
+      result = JSON.parse(textBlock || "{}");
+    } catch (e) {
+      const match = textBlock?.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+      if (match) {
+        result = JSON.parse(match[1]);
+      }
+    }
+    return {
+      summary: result.summary || "",
+      keywords: result.keywords || "",
+    };
+  }
+
   // API Route: GitHub Trending Scraper using Playwright
   app.get("/api/trending", async (req, res) => {
     let browser;
@@ -113,14 +178,8 @@ async function startServer() {
     }
 
     try {
-      const GITHUB_PAT = process.env.GITHUB_PAT;
-      const response = await axios.get(`https://api.github.com/repos/${owner}/${repo}/readme`, {
-        headers: {
-          ...(GITHUB_PAT ? { Authorization: `token ${GITHUB_PAT}` } : {}),
-          Accept: "application/vnd.github.v3.raw"
-        }
-      });
-      res.send(response.data);
+      const content = await fetchReadmeContent(owner as string, repo as string);
+      res.send(content);
     } catch (error: any) {
       console.error("GitHub README Error:", error.response?.data || error.message);
       res.status(500).json({ error: "Failed to fetch README" });
@@ -135,48 +194,42 @@ async function startServer() {
     }
 
     try {
-      const openai = new OpenAI({
-        apiKey: process.env.NVIDIA_API_KEY || "",
-        baseURL: "https://integrate.api.nvidia.com/v1",
-      });
-      const summarizePayload = {
-        model: "deepseek-ai/deepseek-v3.1",
-        messages: [
-          {
-            role: "system" as const,
-            content:
-              "You are a helpful assistant. Always respond with valid JSON only, no markdown formatting, no code blocks.",
-          },
-          {
-            role: "user" as const,
-            content: `你是一个资深的开源项目分析师。请根据以下 GitHub 项目的 README 内容，生成一段极其精炼、吸引人的中文摘要（必须在 140 字以内，建议 80 字左右）。摘要要专业且具有传播力。\n\nREADME 内容：\n${readmeText.substring(0, 5000)}\n\n请以 JSON 格式返回，格式如下（不要添加 markdown 代码块标记）：\n{\n  "summary": "这里是摘要内容..."\n}`,
-          },
-        ],
-        temperature: 0.2,
-        top_p: 0.7,
-        max_tokens: 1000,
-      };
-      console.log(`curl -X POST https://integrate.api.nvidia.com/v1/chat/completions \\\n  -H "Authorization: Bearer $NVIDIA_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d '${JSON.stringify(summarizePayload)}'`);
-      const completion = await openai.chat.completions.create(summarizePayload);
-      const textBlock = completion.choices[0]?.message?.content || "";
-      let result: any = {};
-      try {
-        result = JSON.parse(textBlock || "{}");
-      } catch (e) {
-        const match = textBlock?.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-        if (match) {
-          result = JSON.parse(match[1]);
-        }
-      }
-      res.json({
-        summary: result.summary || "",
-        keywords: result.keywords || "",
-      });
+      const result = await generateReadmeSummary(readmeText);
+      res.json(result);
     } catch (error: any) {
       console.error("NVIDIA summarize error:", error?.message || error);
       res.status(500).json({ error: "Failed to summarize" });
     }
   });
+
+  // API Route: Combined process README
+  app.get("/api/process-readme", async (req, res) => {
+    const { owner, repo } = req.query;
+    if (!owner || !repo) {
+      return res.status(400).json({ error: "Owner and repo are required" });
+    }
+
+    try {
+      console.log(`\n>>> [API] Starting process-readme for: ${owner}/${repo}`);
+      
+      const startTime = Date.now();
+      const readmeText = await fetchReadmeContent(owner as string, repo as string);
+      const fetchTime = Date.now() - startTime;
+      console.log(`<<< [API] README fetched for ${owner}/${repo} in ${fetchTime}ms (Length: ${readmeText.length})`);
+      
+      console.log(`>>> [AI] Summarizing ${owner}/${repo}...`);
+      const aiStartTime = Date.now();
+      const result = await generateReadmeSummary(readmeText);
+      const aiTime = Date.now() - aiStartTime;
+      console.log(`<<< [AI] Summary generated for ${owner}/${repo} in ${aiTime}ms`);
+      
+      res.json(result);
+    } catch (error: any) {
+      console.error(`[API] Error processing README for ${owner}/${repo}:`, error.message);
+      res.status(500).json({ error: `Failed to process README: ${error.message}` });
+    }
+  });
+
 
   // API Route: Global summary via NVIDIA (OpenAI-compatible)
   app.post("/api/global-summary", express.json(), async (req, res) => {
