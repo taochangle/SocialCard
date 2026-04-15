@@ -1,13 +1,14 @@
 # STATE.md
 
 ## Current Milestone: v1.2-自动化发布实现
-- **Phase:** Phase 6: 历史数据加载机制
-- **Status:** Initializing
+- **Phase:** Phase 7: 抖音自动化发布
+- **Status:** In Progress
 
 ## Task Tracking
-- [ ] Task 6.1: Refactor backend `/api/cache` endpoint to support a `date` query parameter.
-- [ ] Task 6.2: Add a Date Picker component to the sidebar UI in `App.tsx`.
-- [ ] Task 6.3: Implement frontend logic to re-trigger data loading when the date is changed.
+- [x] Task 6.1: Refactor backend `/api/cache` endpoint to support a `date` query parameter.
+- [x] Task 6.2: Add a Date Picker component to the sidebar UI in `App.tsx`.
+- [x] Task 6.3: Implement frontend logic to re-trigger data loading when the date is changed.
+
 - [ ] Task 7.1: Implement image upload logic (sequentially handling `0.png` onwards).
 - [ ] Task 7.2: Implement metadata injection (date-based title, summary, hashtags).
 - [ ] Task 7.3: Automate collection and music selection steps.

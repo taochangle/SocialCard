@@ -199,6 +199,7 @@ export default function App() {
   const [globalSummary, setGlobalSummary] = useState("");
   const [globalHashtags, setGlobalHashtags] = useState("");
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
   const [platformStatus, setPlatformStatus] = useState<{ [key: string]: boolean }>({
     douyin: false,
     xiaohongshu: false,
@@ -308,11 +309,12 @@ export default function App() {
 
   const previewRef = useRef<HTMLDivElement>(null);
 
-  const loadCache = async () => {
+  const loadCache = async (date?: string) => {
+    const targetDate = date || selectedDate;
     setLoading(true);
-    setStatusMsg("正在尝试从缓存加载数据...");
+    setStatusMsg(`正在尝试从缓存加载 ${targetDate} 的数据...`);
     try {
-      const response = await fetch("/api/cache");
+      const response = await fetch(`/api/cache?date=${targetDate}`);
       if (response.ok) {
         const data = await response.json();
         setTrendingData(data.projects);
@@ -322,10 +324,10 @@ export default function App() {
         if (data.projects.length > 0) {
           applyProject(0, data.projects);
         }
-        setStatusMsg("成功从缓存加载今日数据");
+        setStatusMsg(`成功从缓存加载 ${targetDate} 的数据`);
         setTimeout(() => setStatusMsg(null), 3000);
       } else {
-        setStatusMsg("今日暂无缓存，请点击同步按钮获取新数据");
+        setStatusMsg(`${targetDate} 暂无缓存，可点击同步按钮获取新数据`);
       }
     } catch (err) {
       console.error("[Cache] Failed to load cache:", err);
@@ -355,14 +357,14 @@ export default function App() {
   }, []);
 
   const displayDate = useMemo(() => {
-    return new Date()
+    return new Date(selectedDate)
       .toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
         year: "numeric",
       })
       .toUpperCase();
-  }, []);
+  }, [selectedDate]);
 
   const formatStars = (stars: string) => {
     if (!stars) return "";
@@ -432,9 +434,9 @@ export default function App() {
     setLoading(true);
     setIsProcessing(true);
     setProcessProgress(0);
-    setStatusMsg("正在获取 GitHub Trending 列表...");
+    setStatusMsg(`正在获取 ${selectedDate} 的 GitHub Trending 列表...`);
     try {
-      const response = await fetch("/api/trending");
+      const response = await fetch(`/api/trending?date=${selectedDate}`);
       if (!response.ok) throw new Error("Failed to fetch");
       const data: RankingItem[] = await response.json();
 
@@ -460,7 +462,7 @@ export default function App() {
 
         try {
           const [owner, repo] = item.title.split("/");
-          const aiRes = await fetch(`/api/process-readme?owner=${owner}&repo=${repo}`);
+          const aiRes = await fetch(`/api/process-readme?owner=${owner}&repo=${repo}&date=${selectedDate}`);
           if (aiRes.ok) {
             const aiData = await aiRes.json();
             processedData[i] = {
@@ -496,7 +498,10 @@ export default function App() {
         const gsRes = await fetch("/api/global-summary", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ projects: processedData }),
+          body: JSON.stringify({ 
+            projects: processedData,
+            date: selectedDate
+          }),
         });
         if (gsRes.ok) {
           const gsData = await gsRes.json();
@@ -635,16 +640,28 @@ export default function App() {
                 </p>
               )}
             </div>
-            <button
-              onClick={fetchTrending}
-              disabled={loading}
-              className={`p-2 rounded-xl bg-white/5 hover:bg-white/10 text-cyan-400 transition-colors border border-cyan-400/20 ${loading ? "opacity-50" : ""}`}
-              title="同步 GitHub 热榜"
-            >
-              <RefreshCw
-                className={`w-5 h-5 ${loading ? "animate-spin" : ""}`}
+            <div className="flex items-center gap-2">
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => {
+                  const newDate = e.target.value;
+                  setSelectedDate(newDate);
+                  loadCache(newDate);
+                }}
+                className="bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-[10px] font-mono text-zinc-400 outline-none focus:border-cyan-400/40 transition-colors"
               />
-            </button>
+              <button
+                onClick={fetchTrending}
+                disabled={loading}
+                className={`p-2 rounded-xl bg-white/5 hover:bg-white/10 text-cyan-400 transition-colors border border-cyan-400/20 ${loading ? "opacity-50" : ""}`}
+                title="同步 GitHub 热榜"
+              >
+                <RefreshCw
+                  className={`w-5 h-5 ${loading ? "animate-spin" : ""}`}
+                />
+              </button>
+            </div>
           </div>
 
           {/* 布局模式切换 */}

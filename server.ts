@@ -116,6 +116,7 @@ ${readmeText.substring(0, 10000)}
 
   // API Route: GitHub Trending Scraper using Playwright
   app.get("/api/trending", async (req, res) => {
+    const targetDate = (req.query.date as string) || new Date().toISOString().split("T")[0];
     let browser;
     try {
       browser = await chromium.launch({ 
@@ -195,7 +196,6 @@ ${readmeText.substring(0, 10000)}
       }
 
       // Save to DB
-      const today = new Date().toISOString().split("T")[0];
       const deleteStmt = db.prepare("DELETE FROM trending_projects WHERE date = ?");
       const insertStmt = db.prepare(`
         INSERT INTO trending_projects (title, content, keywords, username, stars, starsToday, url, date)
@@ -203,9 +203,9 @@ ${readmeText.substring(0, 10000)}
       `);
 
       const transaction = db.transaction((data) => {
-        deleteStmt.run(today);
+        deleteStmt.run(targetDate);
         for (const item of data) {
-          insertStmt.run(item.title, item.content, item.keywords, item.username, item.stars, item.starsToday, item.url, today);
+          insertStmt.run(item.title, item.content, item.keywords, item.username, item.stars, item.starsToday, item.url, targetDate);
         }
       });
       transaction(items);
@@ -253,10 +253,12 @@ ${readmeText.substring(0, 10000)}
 
   // API Route: Combined process README
   app.get("/api/process-readme", async (req, res) => {
-    const { owner, repo } = req.query;
+    const { owner, repo, date } = req.query;
     if (!owner || !repo) {
       return res.status(400).json({ error: "Owner and repo are required" });
     }
+
+    const targetDate = (date as string) || new Date().toISOString().split("T")[0];
 
     try {
       console.log(`\n>>> [API] Starting process-readme for: ${owner}/${repo}`);
@@ -273,7 +275,6 @@ ${readmeText.substring(0, 10000)}
       console.log(`<<< [AI] Summary generated for ${owner}/${repo} in ${aiTime}ms`);
       
       // Save to DB
-      const today = new Date().toISOString().split("T")[0];
       db.prepare(`
         INSERT INTO project_summaries (title, aiSummary, aiKeywords, date)
         VALUES (?, ?, ?, ?)
@@ -281,7 +282,7 @@ ${readmeText.substring(0, 10000)}
           aiSummary = excluded.aiSummary,
           aiKeywords = excluded.aiKeywords,
           date = excluded.date
-      `).run(`${owner}/${repo}`, result.summary, result.keywords, today);
+      `).run(`${owner}/${repo}`, result.summary, result.keywords, targetDate);
 
       res.json(result);
     } catch (error: any) {
@@ -293,10 +294,12 @@ ${readmeText.substring(0, 10000)}
 
   // API Route: Global summary via Ollama
   app.post("/api/global-summary", express.json(), async (req, res) => {
-    const { projects } = req.body;
+    const { projects, date } = req.body;
     if (!Array.isArray(projects)) {
       return res.status(400).json({ error: "projects array is required" });
     }
+
+    const targetDate = (date as string) || new Date().toISOString().split("T")[0];
 
     try {
       const contents = `你是一个资深的开源趋势观察员。请根据以下今日 GitHub Trending 的项目列表，生成一段极其精炼的“今日趋势大总结”以及 5 个用于社交媒体传播的 #话题。
@@ -323,14 +326,13 @@ ${projects.map((item: any) => `${item.title}: ${item.aiSummary || item.content}`
       const fullContent = summaryText + (summaryText ? "\n\n" : "") + hashtags + "\n\n" + urls;
 
       // Save to DB
-      const today = new Date().toISOString().split("T")[0];
       db.prepare(`
         INSERT INTO global_state (date, summary, hashtags)
         VALUES (?, ?, ?)
         ON CONFLICT(date) DO UPDATE SET
           summary = excluded.summary,
           hashtags = excluded.hashtags
-      `).run(today, summaryText, hashtags);
+      `).run(targetDate, summaryText, hashtags);
 
       res.json({ 
         summary: summaryText, 
@@ -453,7 +455,7 @@ ${projects.map((item: any) => `${item.title}: ${item.aiSummary || item.content}`
 
   // API Route: Get cached data for today
   app.get("/api/cache", (req, res) => {
-    const today = new Date().toISOString().split("T")[0];
+    const targetDate = (req.query.date as string) || new Date().toISOString().split("T")[0];
     try {
       const projects = db.prepare(`
         SELECT tp.*, ps.aiSummary, ps.aiKeywords 
@@ -461,9 +463,9 @@ ${projects.map((item: any) => `${item.title}: ${item.aiSummary || item.content}`
         LEFT JOIN project_summaries ps ON tp.title = ps.title
         WHERE tp.date = ?
         ORDER BY tp.id ASC
-      `).all(today);
+      `).all(targetDate);
 
-      const globalState = db.prepare("SELECT * FROM global_state WHERE date = ?").get(today) as any;
+      const globalState = db.prepare("SELECT * FROM global_state WHERE date = ?").get(targetDate) as any;
 
       if (projects.length > 0) {
         res.json({

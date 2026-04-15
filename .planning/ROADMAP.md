@@ -11,9 +11,9 @@
 ### Phase 6: 历史数据加载机制 (Historical Data Loading)
 - **Goal:** Allow users to browse and load data from any previous day stored in SQLite.
 - **Tasks:**
-    - [ ] **Task 6.1:** Refactor backend `/api/cache` endpoint to support a `date` query parameter.
-    - [ ] **Task 6.2:** Add a Date Picker component to the sidebar UI in `App.tsx`.
-    - [ ] **Task 6.3:** Implement frontend logic to re-trigger data loading when the date is changed.
+    - [x] **Task 6.1:** Refactor backend `/api/cache` endpoint to support a `date` query parameter.
+    - [x] **Task 6.2:** Add a Date Picker component to the sidebar UI in `App.tsx`.
+    - [x] **Task 6.3:** Implement frontend logic to re-trigger data loading when the date is changed.
 - **Success Criteria:** Selecting a previous date in the UI instantly populates the project list and summaries with that day's data.
 
 ### Phase 7: 抖音自动化发布 (Douyin Automation)
