@@ -25,3 +25,22 @@
     - [x] **Task 3.2:** Perform a full end-to-end test of the "refresh -> process -> export" flow.
     - [x] **Task 3.3:** Polish UI elements related to progress and error reporting.
 - **Success Criteria:** A complete set of social cards with optimized summaries can be generated and exported without errors.
+
+## Milestone: v1.1 新版本 with sqlite
+
+### Phase 4: SQLite Database Integration & Clean Summary
+- **Goal:** Implement data persistence and refine summary formatting.
+- **Tasks:**
+    - [ ] **Task 4.1:** Install `better-sqlite3` and create the initial database schema (projects, summaries, global state).
+    - [ ] **Task 4.2:** Refactor backend APIs to store fetched data and summaries in the DB and implement a "load from cache" endpoint.
+    - [ ] **Task 4.3:** Update the global summary AI prompt to strictly output plain text (no Markdown).
+    - [ ] **Task 4.4:** Add frontend buttons/logic to choose between cached data and forced regeneration.
+- **Success Criteria:** Data is preserved across page refreshes, and the global summary is free of Markdown.
+
+### Phase 5: Playwright Automation Foundation
+- **Goal:** Lay the groundwork for automated social media posting.
+- **Tasks:**
+    - [ ] **Task 5.1:** Implement a `platform_sessions` table and backend logic to save/load browser cookies for Xiaohongshu and Douyin.
+    - [ ] **Task 5.2:** Create a settings UI component to input, save, and verify these platform cookies.
+    - [ ] **Task 5.3:** Perform a test browser launch that correctly injects the saved cookies for one of the target platforms.
+- **Success Criteria:** Authentication cookies for target platforms can be securely saved and used to launch an authenticated browser session.
