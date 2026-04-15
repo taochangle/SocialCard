@@ -18,6 +18,14 @@ async function startServer() {
 
   async function fetchReadmeContent(owner: string, repo: string, retries = 3): Promise<string> {
     const GITHUB_PAT = process.env.GITHUB_PAT;
+    const url = `https://api.github.com/repos/${owner}/${repo}/readme`;
+    const headers = {
+      ...(GITHUB_PAT ? { Authorization: `token ${GITHUB_PAT}` } : {}),
+      Accept: "application/vnd.github.v3.raw"
+    };
+
+    console.log(`curl -H "Accept: ${headers.Accept}" ${GITHUB_PAT ? `-H "Authorization: token $GITHUB_PAT" ` : ""}"${url}"`);
+
     for (let i = 0; i < retries; i++) {
       try {
         const response = await axios.get(`https://api.github.com/repos/${owner}/${repo}/readme`, {
