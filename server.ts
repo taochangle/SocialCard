@@ -5,6 +5,7 @@ import { fileURLToPath } from "url";
 import axios from "axios";
 import dotenv from "dotenv";
 import { chromium } from "playwright";
+import db from "./db.js";
 
 dotenv.config();
 
@@ -14,6 +15,8 @@ const __dirname = path.dirname(__filename);
 async function startServer() {
   const app = express();
   const PORT = 3000;
+
+  app.use(express.json({ limit: '50mb' }));
 
   async function callOllama(prompt: string): Promise<any> {
     try {
@@ -191,6 +194,22 @@ ${readmeText.substring(0, 10000)}
         await Promise.all(batch.map(fetchTags));
       }
 
+      // Save to DB
+      const today = new Date().toISOString().split("T")[0];
+      const deleteStmt = db.prepare("DELETE FROM trending_projects WHERE date = ?");
+      const insertStmt = db.prepare(`
+        INSERT INTO trending_projects (title, content, keywords, username, stars, starsToday, url, date)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+
+      const transaction = db.transaction((data) => {
+        deleteStmt.run(today);
+        for (const item of data) {
+          insertStmt.run(item.title, item.content, item.keywords, item.username, item.stars, item.starsToday, item.url, today);
+        }
+      });
+      transaction(items);
+
       res.json(items);
     } catch (error: any) {
       console.error("Playwright Scraping Error:", error.message);
@@ -253,6 +272,17 @@ ${readmeText.substring(0, 10000)}
       const aiTime = Date.now() - aiStartTime;
       console.log(`<<< [AI] Summary generated for ${owner}/${repo} in ${aiTime}ms`);
       
+      // Save to DB
+      const today = new Date().toISOString().split("T")[0];
+      db.prepare(`
+        INSERT INTO project_summaries (title, aiSummary, aiKeywords, date)
+        VALUES (?, ?, ?, ?)
+        ON CONFLICT(title) DO UPDATE SET
+          aiSummary = excluded.aiSummary,
+          aiKeywords = excluded.aiKeywords,
+          date = excluded.date
+      `).run(`${owner}/${repo}`, result.summary, result.keywords, today);
+
       res.json(result);
     } catch (error: any) {
       console.error(`[API] Error processing README for ${owner}/${repo}:`, error.message);
@@ -271,6 +301,10 @@ ${readmeText.substring(0, 10000)}
     try {
       const contents = `你是一个资深的开源趋势观察员。请根据以下今日 GitHub Trending 的项目列表，生成一段极其精炼的“今日趋势大总结”以及 5 个用于社交媒体传播的 #话题。
 
+要求：
+1. 总结文字必须是纯文本，**绝对不要使用任何 Markdown 格式**（如 #, *, **, [ ], > 等）。
+2. 直接返回文字内容。
+
 项目列表：
 ${projects.map((item: any) => `${item.title}: ${item.aiSummary || item.content}`).join("\n")}
 
@@ -286,14 +320,163 @@ ${projects.map((item: any) => `${item.title}: ${item.aiSummary || item.content}`
       const hashtags = Array.isArray(data.hashtags) ? data.hashtags.join(" ") : "";
       const urls = projects.map((item: any) => `https://github.com/${item.title}`).join("\n");
       
+      const fullContent = summaryText + (summaryText ? "\n\n" : "") + hashtags + "\n\n" + urls;
+
+      // Save to DB
+      const today = new Date().toISOString().split("T")[0];
+      db.prepare(`
+        INSERT INTO global_state (date, summary, hashtags)
+        VALUES (?, ?, ?)
+        ON CONFLICT(date) DO UPDATE SET
+          summary = excluded.summary,
+          hashtags = excluded.hashtags
+      `).run(today, summaryText, hashtags);
+
       res.json({ 
         summary: summaryText, 
         hashtags: hashtags,
-        fullContent: summaryText + (summaryText ? "\n\n" : "") + hashtags + "\n\n" + urls 
+        fullContent: fullContent
       });
     } catch (error: any) {
       console.error("Ollama global summary error:", error?.message || error);
       res.status(500).json({ error: "Failed to generate global summary" });
+    }
+  });
+
+  // API Route: Get platform login status
+  app.get("/api/platform/:platform/status", (req, res) => {
+    const { platform } = req.params;
+    try {
+      const session = db.prepare("SELECT * FROM platform_sessions WHERE platform = ?").get(platform) as any;
+      res.json({ loggedIn: !!session });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // API Route: Manual login to capture cookies
+  app.post("/api/platform/:platform/login", async (req, res) => {
+    const { platform } = req.params;
+    let browser;
+    try {
+      browser = await chromium.launch({ headless: false }); // Headed for manual login
+      const context = await browser.newContext();
+      const page = await context.newPage();
+
+      let loginUrl = "";
+      let targetUrl = "";
+
+      if (platform === "douyin") {
+        loginUrl = "https://creator.douyin.com/";
+        targetUrl = "creator.douyin.com/creator-micro/home";
+      } else if (platform === "xiaohongshu") {
+        loginUrl = "https://creator.xiaohongshu.com/login?source=official";
+        targetUrl = "creator.xiaohongshu.com/new/home";
+      } else {
+        return res.status(400).json({ error: "Unsupported platform" });
+      }
+
+      await page.goto(loginUrl);
+      console.log(`[Login] Please scan QR code for ${platform}...`);
+
+      // Wait for navigation to the logged-in home page
+      // We use a broad pattern to match subdomains or slightly different paths
+      await page.waitForURL((url) => url.toString().includes(targetUrl), { timeout: 300000 }); // 5 minutes
+      console.log(`[Login] Successfully logged into ${platform}!`);
+
+      // Save state
+      const state = await context.storageState();
+      db.prepare(`
+        INSERT INTO platform_sessions (platform, state)
+        VALUES (?, ?)
+        ON CONFLICT(platform) DO UPDATE SET state = excluded.state
+      `).run(platform, JSON.stringify(state));
+
+      res.json({ success: true, message: `Logged into ${platform}` });
+    } catch (error: any) {
+      console.error(`[Login] ${platform} error:`, error.message);
+      res.status(500).json({ error: error.message });
+    } finally {
+      if (browser) await browser.close();
+    }
+  });
+
+  // API Route: Foundation for automated publishing
+  app.post("/api/platform/:platform/publish", async (req, res) => {
+    const { platform } = req.params;
+    const { images, title, content, hashtags } = req.body; // images: string[] (base64)
+
+    if (!images || !Array.isArray(images) || images.length === 0) {
+      return res.status(400).json({ error: "Images are required" });
+    }
+
+    let browser;
+    try {
+      // Load session
+      const session = db.prepare("SELECT * FROM platform_sessions WHERE platform = ?").get(platform) as any;
+      if (!session) {
+        return res.status(401).json({ error: `Not logged into ${platform}` });
+      }
+
+      console.log(`[Publish] Starting automated post to ${platform}...`);
+      browser = await chromium.launch({ headless: false }); // Visible for now to verify steps
+      const state = JSON.parse(session.state);
+      const context = await browser.newContext({ storageState: state });
+      const page = await context.newPage();
+
+      if (platform === "douyin") {
+        // 1. Open home
+        await page.goto("https://creator.douyin.com/creator-micro/home");
+        // 2. Click "Publish Image/Text" (发布图文)
+        // Note: We'll implement specific selectors later, but let's navigate directly for now
+        await page.goto("https://creator.douyin.com/creator-micro/content/upload?default-tab=3");
+        
+        // TODO: Implement full steps from step.text
+        console.log("[Publish] Douyin automation foundation reached.");
+        
+      } else if (platform === "xiaohongshu") {
+        // 1. Open upload page
+        await page.goto("https://creator.xiaohongshu.com/publish/publish");
+        
+        // TODO: Implement full steps from step.text
+        console.log("[Publish] Xiaohongshu automation foundation reached.");
+      }
+
+      res.json({ success: true, message: `Automation foundation reached for ${platform}` });
+    } catch (error: any) {
+      console.error(`[Publish] ${platform} error:`, error.message);
+      res.status(500).json({ error: error.message });
+    } finally {
+      if (browser) await browser.close();
+    }
+  });
+
+  // API Route: Get cached data for today
+  app.get("/api/cache", (req, res) => {
+    const today = new Date().toISOString().split("T")[0];
+    try {
+      const projects = db.prepare(`
+        SELECT tp.*, ps.aiSummary, ps.aiKeywords 
+        FROM trending_projects tp
+        LEFT JOIN project_summaries ps ON tp.title = ps.title
+        WHERE tp.date = ?
+        ORDER BY tp.id ASC
+      `).all(today);
+
+      const globalState = db.prepare("SELECT * FROM global_state WHERE date = ?").get(today) as any;
+
+      if (projects.length > 0) {
+        res.json({
+          projects,
+          globalSummary: globalState?.summary || "",
+          globalHashtags: globalState?.hashtags || ""
+        });
+      } else {
+        res.status(404).json({ error: "No cache found for today" });
+      }
+    } catch (error: any) {
+      console.error("[DB] Cache error:", error.message);
+      res.status(500).json({ error: "Internal server error" });
     }
   });
 

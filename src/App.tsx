@@ -199,8 +199,141 @@ export default function App() {
   const [globalSummary, setGlobalSummary] = useState("");
   const [globalHashtags, setGlobalHashtags] = useState("");
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
+  const [platformStatus, setPlatformStatus] = useState<{ [key: string]: boolean }>({
+    douyin: false,
+    xiaohongshu: false,
+  });
+
+  const checkPlatformStatus = async () => {
+    try {
+      const platforms = ["douyin", "xiaohongshu"];
+      const newStatus: any = {};
+      for (const p of platforms) {
+        const res = await fetch(`/api/platform/${p}/status`);
+        const data = await res.json();
+        newStatus[p] = data.loggedIn;
+      }
+      setPlatformStatus(newStatus);
+    } catch (err) {
+      console.error("Failed to check platform status:", err);
+    }
+  };
+
+  const loginPlatform = async (platform: string) => {
+    setStatusMsg(`正在启动 ${platform} 登录窗口...`);
+    try {
+      const res = await fetch(`/api/platform/${platform}/login`, { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        setStatusMsg(`${platform} 登录成功！`);
+        checkPlatformStatus();
+      } else {
+        setStatusMsg(`${platform} 登录失败: ${data.error}`);
+      }
+    } catch (err: any) {
+      setStatusMsg(`${platform} 登录出错: ${err.message}`);
+    } finally {
+      setTimeout(() => setStatusMsg(null), 3000);
+    }
+  };
+
+  const publishToPlatform = async (platform: string) => {
+    if (!trendingData.length) {
+      alert("没有数据可发布");
+      return;
+    }
+
+    setLoading(true);
+    setStatusMsg(`正在准备 ${platform} 发布数据...`);
+    try {
+      // 1. Generate images in memory
+      const images: string[] = [];
+      const originalMode = layoutMode;
+      const originalIndex = currentIndex;
+
+      const captureBase64 = async () => {
+        await new Promise((resolve) => setTimeout(resolve, 600));
+        await waitForImages(previewRef.current!);
+        return await toPng(previewRef.current!, {
+          quality: 1,
+          pixelRatio: 2,
+          cacheBust: true,
+        });
+      };
+
+      // Cover
+      setLayoutMode("index");
+      images.push(await captureBase64());
+
+      // Details (first 5 for testing to save time/tokens, or all 15)
+      const count = Math.min(trendingData.length, 15);
+      for (let i = 0; i < count; i++) {
+        setStatusMsg(`正在生成图片 ${i + 1}/${count}...`);
+        applyProject(i);
+        setLayoutMode("detail");
+        images.push(await captureBase64());
+      }
+
+      // Restore
+      applyProject(originalIndex);
+      setLayoutMode(originalMode);
+
+      // 2. Send to backend
+      setStatusMsg(`正在启动 ${platform} 自动化发布程序...`);
+      const res = await fetch(`/api/platform/${platform}/publish`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          images,
+          title: displayDate,
+          content: globalSummary,
+          hashtags: globalHashtags,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setStatusMsg(`${platform} 自动化任务已启动！`);
+      } else {
+        setStatusMsg(`${platform} 发布失败: ${data.error}`);
+      }
+    } catch (err: any) {
+      console.error(err);
+      setStatusMsg(`发布出错: ${err.message}`);
+    } finally {
+      setLoading(false);
+      setTimeout(() => setStatusMsg(null), 5000);
+    }
+  };
 
   const previewRef = useRef<HTMLDivElement>(null);
+
+  const loadCache = async () => {
+    setLoading(true);
+    setStatusMsg("正在尝试从缓存加载数据...");
+    try {
+      const response = await fetch("/api/cache");
+      if (response.ok) {
+        const data = await response.json();
+        setTrendingData(data.projects);
+        setGlobalSummary(data.globalSummary);
+        setGlobalHashtags(data.globalHashtags);
+        
+        if (data.projects.length > 0) {
+          applyProject(0, data.projects);
+        }
+        setStatusMsg("成功从缓存加载今日数据");
+        setTimeout(() => setStatusMsg(null), 3000);
+      } else {
+        setStatusMsg("今日暂无缓存，请点击同步按钮获取新数据");
+      }
+    } catch (err) {
+      console.error("[Cache] Failed to load cache:", err);
+      setStatusMsg("加载缓存失败");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Initialize with today's date and time
   useEffect(() => {
@@ -216,6 +349,9 @@ export default function App() {
     setWeekdayText(
       now.toLocaleDateString("en-US", { weekday: "long" }).toUpperCase(),
     );
+
+    loadCache();
+    checkPlatformStatus();
   }, []);
 
   const displayDate = useMemo(() => {
@@ -276,8 +412,9 @@ export default function App() {
     return html.replace(/\n/g, "<br>");
   }, [content, keywordList, theme.accentColor]);
 
-  const applyProject = (index: number) => {
-    const item = trendingData[index];
+  const applyProject = (index: number, data?: RankingItem[]) => {
+    const targetData = data || trendingData;
+    const item = targetData[index];
     if (!item) return;
 
     updateCurrentIndex(index);
@@ -612,6 +749,67 @@ export default function App() {
                   ></div>
                 </button>
               ))}
+            </div>
+          </section>
+
+          {/* 社交媒体发布 */}
+          <section className="mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <Sparkles className="w-4 h-4 text-cyan-400" />
+              <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
+                一键分发 (Beta)
+              </h3>
+            </div>
+            <div className="space-y-3">
+              {/* Douyin */}
+              <div className="p-3 rounded-xl bg-zinc-900 border border-white/5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold">抖音 (Douyin)</span>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-mono ${platformStatus.douyin ? "bg-green-500/20 text-green-400" : "bg-zinc-800 text-zinc-500"}`}>
+                    {platformStatus.douyin ? "已登录" : "未登录"}
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => loginPlatform("douyin")}
+                    className="flex-1 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-bold transition-all"
+                  >
+                    扫码登录
+                  </button>
+                  <button
+                    onClick={() => publishToPlatform("douyin")}
+                    disabled={!platformStatus.douyin || loading}
+                    className="flex-1 py-2 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 text-[10px] font-bold transition-all disabled:opacity-30"
+                  >
+                    自动发布
+                  </button>
+                </div>
+              </div>
+
+              {/* Xiaohongshu */}
+              <div className="p-3 rounded-xl bg-zinc-900 border border-white/5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold">小红书 (XHS)</span>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-mono ${platformStatus.xiaohongshu ? "bg-green-500/20 text-green-400" : "bg-zinc-800 text-zinc-500"}`}>
+                    {platformStatus.xiaohongshu ? "已登录" : "未登录"}
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => loginPlatform("xiaohongshu")}
+                    className="flex-1 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-bold transition-all"
+                  >
+                    扫码登录
+                  </button>
+                  <button
+                    onClick={() => publishToPlatform("xiaohongshu")}
+                    disabled={!platformStatus.xiaohongshu || loading}
+                    className="flex-1 py-2 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 text-[10px] font-bold transition-all disabled:opacity-30"
+                  >
+                    自动发布
+                  </button>
+                </div>
+              </div>
             </div>
           </section>
 
