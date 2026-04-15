@@ -27,6 +27,8 @@ export default function App() {
         setAuthorName={logic.setAuthorName}
         selectedDate={logic.selectedDate}
         setSelectedDate={logic.setSelectedDate}
+        globalSummary={logic.globalSummary}
+        globalHashtags={logic.globalHashtags}
         platformStatus={logic.platformStatus}
         trendingData={logic.trendingData}
         currentIndex={logic.currentIndex}
@@ -36,6 +38,7 @@ export default function App() {
         publishToPlatform={logic.publishToPlatform}
         exportImage={logic.exportImage}
         applyProject={logic.applyProject}
+        setStatusMsg={logic.setStatusMsg}
       />
 
       <PreviewPanel

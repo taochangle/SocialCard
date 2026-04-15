@@ -25,6 +25,8 @@ interface SidebarProps {
   setAuthorName: (name: string) => void;
   selectedDate: string;
   setSelectedDate: (date: string) => void;
+  globalSummary: string;
+  globalHashtags: string;
   platformStatus: { [key: string]: boolean };
   trendingData: RankingItem[];
   currentIndex: number;
@@ -34,6 +36,7 @@ interface SidebarProps {
   publishToPlatform: (platform: string) => void;
   exportImage: () => void;
   applyProject: (index: number) => void;
+  setStatusMsg: (msg: string | null) => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -50,6 +53,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   setAuthorName,
   selectedDate,
   setSelectedDate,
+  globalSummary,
+  globalHashtags,
   platformStatus,
   trendingData,
   currentIndex,
@@ -59,6 +64,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   publishToPlatform,
   exportImage,
   applyProject,
+  setStatusMsg,
 }) => {
   return (
     <aside className="w-full shrink-0 border-b border-white/10 bg-zinc-950/80 backdrop-blur lg:w-[360px] xl:w-[400px] lg:border-b-0 lg:border-r z-10">
@@ -242,30 +248,92 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </section>
 
         {layoutMode === 'index' && (
-          <section className="mb-8">
-            <div className="flex items-center gap-2 mb-4">
-              <TypeIcon className="w-4 h-4 text-cyan-400" />
-              <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
-                通用配置
-              </h3>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="text-[10px] text-zinc-500 uppercase font-bold mb-1.5 block">
-                  作者名称
-                </label>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">@</span>
-                  <input
-                    type="text"
-                    value={authorName}
-                    onChange={(e) => setAuthorName(e.target.value)}
-                    className="w-full bg-zinc-900/50 border border-white/5 rounded-xl pl-8 pr-4 py-2.5 text-sm outline-none focus:border-cyan-400/40 transition-colors"
-                  />
+          <>
+            <section className="mb-8">
+              <div className="flex items-center gap-2 mb-4">
+                <TypeIcon className="w-4 h-4 text-cyan-400" />
+                <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
+                  通用配置
+                </h3>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-[10px] text-zinc-500 uppercase font-bold mb-1.5 block">
+                    作者名称
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">@</span>
+                    <input
+                      type="text"
+                      value={authorName}
+                      onChange={(e) => setAuthorName(e.target.value)}
+                      className="w-full bg-zinc-900/50 border border-white/5 rounded-xl pl-8 pr-4 py-2.5 text-sm outline-none focus:border-cyan-400/40 transition-colors"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-          </section>
+            </section>
+
+            {/* AI Summaries Section */}
+            <section className="mb-8 space-y-6">
+              {/* Summary */}
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+                    今日趋势大总结
+                  </span>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const urls = trendingData.map((item) => `https://github.com/${item.title}`).join("\n");
+                        await navigator.clipboard.writeText(globalSummary + "\n\n" + globalHashtags + "\n\n" + urls);
+                        setStatusMsg("已复制到剪贴板");
+                        setTimeout(() => setStatusMsg(null), 2000);
+                      } catch {
+                        setStatusMsg("复制失败");
+                      }
+                    }}
+                    className="px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-bold text-cyan-400 transition-colors border border-white/5"
+                  >
+                    一键复制
+                  </button>
+                </div>
+                <textarea
+                  readOnly
+                  value={globalSummary}
+                  className="w-full h-32 bg-zinc-900/50 border border-white/5 rounded-xl p-3 text-xs text-zinc-300 outline-none resize-none focus:border-cyan-400/40 transition-colors custom-scrollbar"
+                />
+              </div>
+
+              {/* Hashtags */}
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+                    话题 (#Hashtags)
+                  </span>
+                  <button
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(globalHashtags);
+                        setStatusMsg("已复制话题");
+                        setTimeout(() => setStatusMsg(null), 2000);
+                      } catch {
+                        setStatusMsg("复制失败");
+                      }
+                    }}
+                    className="px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-bold text-cyan-400 transition-colors border border-white/5"
+                  >
+                    复制话题
+                  </button>
+                </div>
+                <textarea
+                  readOnly
+                  value={globalHashtags}
+                  className="w-full h-20 bg-zinc-900/50 border border-white/5 rounded-xl p-3 text-xs text-cyan-400/80 outline-none resize-none focus:border-cyan-400/40 transition-colors font-mono"
+                />
+              </div>
+            </section>
+          </>
         )}
 
         <div className="pt-4 border-t border-white/10">
