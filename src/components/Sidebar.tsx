@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import {
   LayoutGrid,
   RefreshCw,
@@ -7,7 +7,10 @@ import {
   Sparkles,
   Type as TypeIcon,
   Download,
+  Calendar,
+  Image as ImageIcon,
 } from "lucide-react";
+import { motion } from "framer-motion";
 import { TEMPLATES } from "../constants";
 import { Theme, RankingItem } from "../types";
 
@@ -66,9 +69,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
   applyProject,
   setStatusMsg,
 }) => {
+  const dateInputRef = useRef<HTMLInputElement>(null);
+
   return (
-    <aside className="w-full shrink-0 border-b border-white/10 bg-zinc-950/80 backdrop-blur lg:w-[360px] xl:w-[400px] lg:border-b-0 lg:border-r z-10">
-      <div className="h-full overflow-y-auto px-5 py-6">
+    <aside className="w-full shrink-0 border-b border-white/10 bg-zinc-950/80 backdrop-blur lg:w-[360px] xl:w-[400px] lg:border-b-0 lg:border-r z-10 flex flex-col h-screen">
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-y-auto px-5 py-6 custom-scrollbar">
         <div className="mb-8 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
@@ -86,16 +92,26 @@ export const Sidebar: React.FC<SidebarProps> = ({
             )}
           </div>
           <div className="flex items-center gap-2">
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => {
-                const newDate = e.target.value;
-                setSelectedDate(newDate);
-                loadCache(newDate);
-              }}
-              className="bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-[10px] font-mono text-zinc-400 outline-none focus:border-cyan-400/40 transition-colors"
-            />
+            <div className="relative">
+              <input
+                ref={dateInputRef}
+                type="date"
+                value={selectedDate}
+                onChange={(e) => {
+                  const newDate = e.target.value;
+                  setSelectedDate(newDate);
+                  loadCache(newDate);
+                }}
+                className="absolute inset-0 opacity-0 pointer-events-none w-0 h-0"
+              />
+              <button
+                onClick={() => dateInputRef.current?.showPicker()}
+                className="flex items-center gap-2 bg-white/5 border border-white/10 hover:border-cyan-400/40 rounded-lg px-2.5 py-1.5 text-[10px] font-mono text-zinc-300 transition-all"
+              >
+                <Calendar className="w-3 h-3 text-cyan-400" />
+                {selectedDate}
+              </button>
+            </div>
             <button
               onClick={fetchTrending}
               disabled={loading}
@@ -105,6 +121,36 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <RefreshCw className={`w-5 h-5 ${loading ? "animate-spin" : ""}`} />
             </button>
           </div>
+        </div>
+
+        {/* Status Panel (Migrated from Preview) */}
+        <div className="mb-8 flex flex-col gap-3 px-4 py-3 rounded-xl bg-white/5 border border-white/5 backdrop-blur-sm">
+          <div className="flex items-center gap-3">
+            <ImageIcon className="w-3.5 h-3.5 text-zinc-500" />
+            <p className="text-[10px] text-zinc-400 font-medium">
+              {statusMsg ||
+                (layoutMode === "index"
+                  ? "索引模式：展示今日 Top 15 项目概览。"
+                  : "详情模式：深度展示单个项目的核心数据与摘要。")}
+            </p>
+          </div>
+
+          {isProcessing && (
+            <div className="w-full space-y-1.5">
+              <div className="w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
+                <motion.div
+                  className="h-full bg-cyan-500"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${processProgress}%` }}
+                  transition={{ duration: 0.5 }}
+                />
+              </div>
+              <div className="flex justify-between text-[9px] font-mono text-zinc-500 uppercase tracking-tight">
+                <span>Progress</span>
+                <span>{processProgress}%</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* 布局模式切换 */}
@@ -208,45 +254,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         </section>
 
-        {/* 社交媒体发布 */}
-        <section className="mb-8">
-          <div className="flex items-center gap-2 mb-4">
-            <Sparkles className="w-4 h-4 text-cyan-400" />
-            <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
-              一键分发 (Beta)
-            </h3>
-          </div>
-          <div className="space-y-3">
-            {["douyin", "xiaohongshu"].map((p) => (
-              <div key={p} className="p-3 rounded-xl bg-zinc-900 border border-white/5 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold">
-                    {p === "douyin" ? "抖音 (Douyin)" : "小红书 (XHS)"}
-                  </span>
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-mono ${platformStatus[p] ? "bg-green-500/20 text-green-400" : "bg-zinc-800 text-zinc-500"}`}>
-                    {platformStatus[p] ? "已登录" : "未登录"}
-                  </span>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => loginPlatform(p)}
-                    className="flex-1 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-bold transition-all"
-                  >
-                    扫码登录
-                  </button>
-                  <button
-                    onClick={() => publishToPlatform(p)}
-                    disabled={!platformStatus[p] || loading}
-                    className="flex-1 py-2 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 text-[10px] font-bold transition-all disabled:opacity-30"
-                  >
-                    自动发布
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
         {layoutMode === 'index' && (
           <>
             <section className="mb-8">
@@ -305,6 +312,43 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 />
               </div>
 
+              {/* 社交媒体发布 - Reordered here */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <Sparkles className="w-4 h-4 text-cyan-400" />
+                  <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
+                    一键分发 (Beta)
+                  </h3>
+                </div>
+                {["douyin", "xiaohongshu"].map((p) => (
+                  <div key={p} className="p-3 rounded-xl bg-zinc-900 border border-white/5 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold">
+                        {p === "douyin" ? "抖音 (Douyin)" : "小红书 (XHS)"}
+                      </span>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-mono ${platformStatus[p] ? "bg-green-500/20 text-green-400" : "bg-zinc-800 text-zinc-500"}`}>
+                        {platformStatus[p] ? "已登录" : "未登录"}
+                      </span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => loginPlatform(p)}
+                        className="flex-1 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-bold transition-all"
+                      >
+                        扫码登录
+                      </button>
+                      <button
+                        onClick={() => publishToPlatform(p)}
+                        disabled={!platformStatus[p] || loading}
+                        className="flex-1 py-2 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 text-[10px] font-bold transition-all disabled:opacity-30"
+                      >
+                        自动发布
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
               {/* Hashtags */}
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">
@@ -335,16 +379,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </section>
           </>
         )}
+      </div>
 
-        <div className="pt-4 border-t border-white/10">
-          <button
-            onClick={exportImage}
-            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-white text-zinc-950 font-black text-sm hover:bg-cyan-400 transition-all active:scale-[0.98] shadow-lg shadow-white/5"
-          >
-            <Download className="w-4 h-4" />
-            导出 3:4 高清图
-          </button>
-        </div>
+      {/* Fixed Footer Actions */}
+      <div className="p-5 border-t border-white/10 bg-zinc-950">
+        <button
+          onClick={exportImage}
+          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-white text-zinc-950 font-black text-sm hover:bg-cyan-400 transition-all active:scale-[0.98] shadow-lg shadow-white/5"
+        >
+          <Download className="w-4 h-4" />
+          导出 3:4 高清图
+        </button>
       </div>
     </aside>
   );

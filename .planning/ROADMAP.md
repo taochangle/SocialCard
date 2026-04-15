@@ -17,8 +17,8 @@
 ### Phase 11: 侧边栏布局与导航打磨 (Sidebar Layout & Navigation Polish)
 - **Goal:** Improve the sidebar's structure and components for a better user experience.
 - **Tasks:**
-    - [ ] **Task 11.1:** Upgrade the date input to a custom styled date component.
-    - [ ] **Task 11.2:** Reorder sidebar sections (Move Distribution Beta above Hashtags).
-    - [ ] **Task 11.3:** Fix the Export button to the bottom of the sidebar.
-    - [ ] **Task 11.4:** Implement independent scrolling for the sidebar content.
+    - [x] **Task 11.1:** Upgrade the date input to a custom styled date component.
+    - [x] **Task 11.2:** Reorder sidebar sections (Move Distribution Beta above Hashtags).
+    - [x] **Task 11.3:** Fix the Export button to the bottom of the sidebar.
+    - [x] **Task 11.4:** Implement independent scrolling for the sidebar content.
 - **Success Criteria:** The sidebar is scrollable, the export button is always reachable at the bottom, and the date selection is more intuitive and visually appealing.

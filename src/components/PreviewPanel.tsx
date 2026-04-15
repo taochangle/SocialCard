@@ -117,36 +117,6 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({
             )}
           </div>
         </div>
-
-        {/* Status Panel */}
-        <div className="w-full mt-8 flex flex-col gap-3 px-6 py-4 rounded-2xl bg-white/5 border border-white/5 backdrop-blur-sm">
-          <div className="flex items-center gap-4">
-            <ImageIcon className="w-4 h-4 text-zinc-500" />
-            <p className="text-[11px] text-zinc-400 font-medium">
-              {statusMsg ||
-                (layoutMode === "index"
-                  ? "索引模式：展示今日 Top 15 项目概览。"
-                  : "详情模式：深度展示单个项目的核心数据与摘要。")}
-            </p>
-          </div>
-
-          {isProcessing && (
-            <div className="w-full space-y-2">
-              <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                <motion.div
-                  className="h-full bg-cyan-500"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${processProgress}%` }}
-                  transition={{ duration: 0.5 }}
-                />
-              </div>
-              <div className="flex justify-between text-[10px] font-mono text-zinc-500 uppercase tracking-tight">
-                <span>Progress</span>
-                <span>{processProgress}%</span>
-              </div>
-            </div>
-          )}
-        </div>
       </div>
     </main>
   );

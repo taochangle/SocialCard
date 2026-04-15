@@ -71,14 +71,20 @@ export const platformService = {
         console.log("[Publish] Uploading images...");
         const fileInput = await page.waitForSelector('input[type="file"]');
         await fileInput.setInputFiles(filePayloads);
-        
+        // 6. 填充标题 (格式: YYYY-MM-DD)
         console.log("[Publish] Filling title...");
+        const dateMatch = title.match(/(\d{4})[^\d](\d{1,2})[^\d](\d{1,2})/);
+        const formattedTitle = dateMatch 
+          ? `${dateMatch[1]}-${dateMatch[2].padStart(2, '0')}-${dateMatch[3].padStart(2, '0')}`
+          : title;
+
         try {
           const titleInput = await page.waitForSelector('.semi-input.semi-input-default', { timeout: 10000 });
-          await titleInput.fill(title);
+          await titleInput.fill(formattedTitle);
         } catch (e) {
-          await page.getByPlaceholder('添加作品标题').fill(title);
+          await page.getByPlaceholder('添加作品标题').fill(formattedTitle);
         }
+
 
         console.log("[Publish] Filling description...");
         const editor = await page.waitForSelector('.zone-container .ace-line');
@@ -92,23 +98,32 @@ export const platformService = {
           await page.keyboard.press('Enter');
           await page.waitForTimeout(500);
         }
+// 9. 选择合集 (使用精准选择器)
+console.log("[Publish] Selecting collection...");
+try {
+  const selectTrigger = await page.waitForSelector('.semi-select.semi-select-single', { timeout: 5000 });
+  await selectTrigger.click();
+  await page.waitForTimeout(1000);
+  const option = await page.locator('.semi-select-option').filter({ hasText: 'Github Trending' }).first();
+  await option.click();
+} catch (e) {
+  console.warn("[Publish] Could not select collection:", e.message);
+}
 
-        console.log("[Publish] Selecting collection...");
-        try {
-          const collectionBtn = await page.getByText('添加合集').first();
-          await collectionBtn.click();
-          await page.waitForTimeout(1000);
-          await page.getByText('Github Trending').first().click();
-        } catch (e) {}
 
+        // 10. 选择音乐 (使用 action- 前缀选择器)
         console.log("[Publish] Selecting music...");
         try {
-          await page.getByText('选择音乐').first().click();
-          await page.waitForTimeout(1000);
+          const musicBtn = await page.locator('span[class*="action-"]:has-text("选择音乐")').first();
+          await musicBtn.click();
+          await page.waitForTimeout(2000);
+          
           await page.getByText('飙升榜').first().click();
-          await page.waitForTimeout(1000);
+          await page.waitForTimeout(1500);
           await page.locator('.music-item-use-btn').first().click();
-        } catch (e) {}
+        } catch (e) {
+          console.warn("[Publish] Could not select music:", e.message);
+        }
 
         console.log("[Publish] Ready to publish!");
         
