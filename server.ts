@@ -5,7 +5,6 @@ import { fileURLToPath } from "url";
 import axios from "axios";
 import dotenv from "dotenv";
 import { chromium } from "playwright";
-import OpenAI from "openai";
 
 dotenv.config();
 
@@ -16,6 +15,41 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
+  async function callOllama(prompt: string): Promise<any> {
+    try {
+      console.log(`[AI] Calling local Ollama (gemma4:e2b)...`);
+      const response = await axios.post("http://localhost:11434/api/chat", {
+        model: "gemma4:e2b",
+        messages: [{ role: "user", content: prompt }],
+        stream: false,
+        format: "json",
+        options: {
+          temperature: 0.2,
+          top_p: 0.7,
+        }
+      }, { timeout: 60000 });
+
+      const content = response.data.message.content;
+      try {
+        return JSON.parse(content);
+      } catch (e) {
+        console.error("[AI] Failed to parse Ollama JSON response:", content);
+        // Fallback: try regex
+        const summaryMatch = content.match(/"summary":\s*"([\s\S]*?)"/);
+        const keywordsMatch = content.match(/"keywords":\s*"([\s\S]*?)"/);
+        const hashtagsMatch = content.match(/"hashtags":\s*\[([\s\S]*?)\]/);
+        return {
+          summary: summaryMatch ? summaryMatch[1] : "",
+          keywords: keywordsMatch ? keywordsMatch[1] : "",
+          hashtags: hashtagsMatch ? hashtagsMatch[1].split(',').map((s: any) => s.replace(/"/g, '').trim()) : []
+        };
+      }
+    } catch (error: any) {
+      console.error("[AI] Ollama API error:", error.message);
+      throw error;
+    }
+  }
+
   async function fetchReadmeContent(owner: string, repo: string, retries = 3): Promise<string> {
     const GITHUB_PAT = process.env.GITHUB_PAT;
     const url = `https://api.github.com/repos/${owner}/${repo}/readme`;
@@ -24,7 +58,7 @@ async function startServer() {
       Accept: "application/vnd.github.v3.raw"
     };
 
-    console.log(`curl -H "Accept: ${headers.Accept}" ${GITHUB_PAT ? `-H "Authorization: token $GITHUB_PAT" ` : ""}"${url}"`);
+    console.log(`curl -H "Accept: ${headers.Accept}" ${GITHUB_PAT ? `-H "Authorization: token ${GITHUB_PAT}" ` : ""}"${url}"`);
 
     for (let i = 0; i < retries; i++) {
       try {
@@ -53,21 +87,7 @@ async function startServer() {
   }
 
   async function generateReadmeSummary(readmeText: string): Promise<{ summary: string, keywords: string }> {
-    const openai = new OpenAI({
-      apiKey: process.env.NVIDIA_API_KEY || "",
-      baseURL: "https://integrate.api.nvidia.com/v1",
-    });
-    const summarizePayload = {
-      model: "deepseek-ai/deepseek-v3",
-      messages: [
-        {
-          role: "system" as const,
-          content:
-            "You are a professional open-source project analyst. Always respond with valid JSON only, no markdown formatting, no code blocks.",
-        },
-        {
-          role: "user" as const,
-          content: `请根据以下 GitHub 项目的 README 内容，生成一个极其精炼、吸引人的中文摘要和一组关键词。
+    const prompt = `请根据以下 GitHub 项目的 README 内容，生成一个极其精炼、吸引人的中文摘要和一组关键词。
 
 要求：
 1. 摘要 (summary)：必须在 140 字以内，建议 80 字左右，专业且具有传播力。
@@ -75,34 +95,19 @@ async function startServer() {
 3. 语言：必须使用中文。
 
 README 内容：
-${readmeText.substring(0, 5000)}
+${readmeText.substring(0, 10000)}
 
 请以 JSON 格式返回：
 {
   "summary": "这里是生成的中文摘要...",
   "keywords": "关键词1,关键词2..."
-}`,
-        },
-      ],
-      temperature: 0.2,
-      top_p: 0.7,
-      max_tokens: 1000,
-    };
-    console.log(`curl -X POST https://integrate.api.nvidia.com/v1/chat/completions \\\n  -H "Authorization: Bearer $NVIDIA_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d '${JSON.stringify(summarizePayload)}'`);
-    const completion = await openai.chat.completions.create(summarizePayload);
-    const textBlock = completion.choices[0]?.message?.content || "";
-    let result: any = {};
-    try {
-      result = JSON.parse(textBlock || "{}");
-    } catch (e) {
-      const match = textBlock?.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-      if (match) {
-        result = JSON.parse(match[1]);
-      }
-    }
+}`;
+
+    const data = await callOllama(prompt);
+
     return {
-      summary: result.summary || "",
-      keywords: result.keywords || "",
+      summary: data.summary || "",
+      keywords: data.keywords || "",
     };
   }
 
@@ -111,7 +116,7 @@ ${readmeText.substring(0, 5000)}
     let browser;
     try {
       browser = await chromium.launch({ 
-        headless: true,
+        headless: false,
       });
       const context = await browser.newContext({
         userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
@@ -119,7 +124,8 @@ ${readmeText.substring(0, 5000)}
       const page = await context.newPage();
       
       await page.goto("https://github.com/trending?spoken_language_code=", {
-        waitUntil: "networkidle"
+        waitUntil: "networkidle",
+        timeout: 60000
       });
       
       const items = await page.evaluate(() => {
@@ -159,25 +165,24 @@ ${readmeText.substring(0, 5000)}
         console.log("Page title:", await page.title());
       }
 
-      // Fetch tags from each project page in parallel using multiple tabs
+      // Fetch tags from GitHub API
       const concurrency = 5;
       const fetchTags = async (item: any) => {
-        const p = await context.newPage();
         try {
-          await p.goto(`https://github.com/${item.title}`, {
-            waitUntil: "networkidle",
-            timeout: 15000,
+          const GITHUB_PAT = process.env.GITHUB_PAT;
+          const [owner, repo] = item.title.split("/");
+          const response = await axios.get(`https://api.github.com/repos/${owner}/${repo}`, {
+            headers: {
+              ...(GITHUB_PAT ? { Authorization: `token ${GITHUB_PAT}` } : {}),
+              Accept: "application/vnd.github.v3+json"
+            },
+            timeout: 10000
           });
-          const tags = await p.evaluate(() => {
-            const els = Array.from(document.querySelectorAll(".tmp-my-3 .topic-tag"));
-            return els.map((el: any) => el.textContent?.trim()).filter(Boolean);
-          });
-          item.keywords = tags.join(",");
+          const topics = response.data.topics || [];
+          item.keywords = topics.join(",");
           console.log(`[Tags] ${item.title}: ${item.keywords}`);
         } catch (err: any) {
           console.error(`[Tags] Failed to fetch tags for ${item.title}:`, err.message);
-        } finally {
-          await p.close();
         }
       };
 
@@ -256,7 +261,7 @@ ${readmeText.substring(0, 5000)}
   });
 
 
-  // API Route: Global summary via NVIDIA (OpenAI-compatible)
+  // API Route: Global summary via Ollama
   app.post("/api/global-summary", express.json(), async (req, res) => {
     const { projects } = req.body;
     if (!Array.isArray(projects)) {
@@ -264,10 +269,6 @@ ${readmeText.substring(0, 5000)}
     }
 
     try {
-      const openai = new OpenAI({
-        apiKey: process.env.NVIDIA_API_KEY || "",
-        baseURL: "https://integrate.api.nvidia.com/v1",
-      });
       const contents = `你是一个资深的开源趋势观察员。请根据以下今日 GitHub Trending 的项目列表，生成一段极其精炼的“今日趋势大总结”以及 5 个用于社交媒体传播的 #话题。
 
 项目列表：
@@ -278,45 +279,20 @@ ${projects.map((item: any) => `${item.title}: ${item.aiSummary || item.content}`
   "summary": "这里是今日趋势的深度总结文字...",
   "hashtags": ["#话题1", "#话题2", "#话题3", "#话题4", "#话题5"]
 }`;
-      const globalPayload = {
-        model: "deepseek-ai/deepseek-v3",
-        messages: [
-          {
-            role: "system" as const,
-            content:
-              "You are a helpful assistant. Always respond with valid JSON only, no markdown formatting, no code blocks.",
-          },
-          {
-            role: "user" as const,
-            content: contents,
-          },
-        ],
-        temperature: 0.2,
-        top_p: 0.7,
-        max_tokens: 1000,
-      };
-      console.log(`curl -X POST https://integrate.api.nvidia.com/v1/chat/completions \\\n  -H "Authorization: Bearer $NVIDIA_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d '${JSON.stringify(globalPayload)}'`);
-      const completion = await openai.chat.completions.create(globalPayload);
-      const textBlock = completion.choices[0]?.message?.content || "";
-      let result: any = {};
-      try {
-        result = JSON.parse(textBlock || "{}");
-      } catch (e) {
-        const match = textBlock?.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-        if (match) {
-          result = JSON.parse(match[1]);
-        }
-      }
-      const summaryText = result.summary || "";
-      const hashtags = Array.isArray(result.hashtags) ? result.hashtags.join(" ") : "";
+
+      const data = await callOllama(contents);
+
+      const summaryText = data.summary || "";
+      const hashtags = Array.isArray(data.hashtags) ? data.hashtags.join(" ") : "";
       const urls = projects.map((item: any) => `https://github.com/${item.title}`).join("\n");
+      
       res.json({ 
         summary: summaryText, 
         hashtags: hashtags,
         fullContent: summaryText + (summaryText ? "\n\n" : "") + hashtags + "\n\n" + urls 
       });
     } catch (error: any) {
-      console.error("NVIDIA global summary error:", error?.message || error);
+      console.error("Ollama global summary error:", error?.message || error);
       res.status(500).json({ error: "Failed to generate global summary" });
     }
   });

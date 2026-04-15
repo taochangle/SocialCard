@@ -197,6 +197,7 @@ export default function App() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processProgress, setProcessProgress] = useState(0);
   const [globalSummary, setGlobalSummary] = useState("");
+  const [globalHashtags, setGlobalHashtags] = useState("");
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
 
   const previewRef = useRef<HTMLDivElement>(null);
@@ -363,6 +364,7 @@ export default function App() {
         if (gsRes.ok) {
           const gsData = await gsRes.json();
           if (gsData.summary) setGlobalSummary(gsData.summary);
+          if (gsData.hashtags) setGlobalHashtags(gsData.hashtags);
         }
       } catch (err: any) {
         console.error("[AI] Error generating global summary:", err?.message || err);
@@ -706,23 +708,21 @@ export default function App() {
                 {layoutMode === "detail" ? (
                   <>
                     {/* Detail Mode Header */}
-                    <div className="flex items-center gap-5 mb-8">
+                    <div className="flex items-center gap-4 mb-8">
+                      <img
+                        src={`https://ui-avatars.com/api/?name=${projectName.split("/")[0]}&background=random&size=100`}
+                        alt="avatar"
+                        crossOrigin="anonymous"
+                        className="avatar d-none d-md-block w-14 h-14 rounded-full object-cover shadow-sm flex-shrink-0"
+                        referrerPolicy="no-referrer"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src =
+                            `https://picsum.photos/seed/${projectName.split("/")[0]}/100/100`;
+                        }}
+                      />
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <img
-                            src={`https://ui-avatars.com/api/?name=${projectName.split("/")[0]}&background=random&size=100`}
-                            alt="avatar"
-                            crossOrigin="anonymous"
-                            className="avatar mr-2 d-none d-md-block w-6 h-6 rounded-full object-cover"
-                            referrerPolicy="no-referrer"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src =
-                                `https://picsum.photos/seed/${projectName.split("/")[0]}/100/100`;
-                            }}
-                          />
-                          <div className="text-2xl font-black tracking-tight leading-tight truncate">
-                            {projectName}
-                          </div>
+                        <div className="text-2xl font-black tracking-tight leading-tight truncate mb-1">
+                          {projectName}
                         </div>
                         <div className="text-xs font-mono opacity-40 truncate">
                           {projectUrl}
@@ -731,16 +731,21 @@ export default function App() {
                     </div>
 
                     {/* Stats Row */}
-                    <div className="flex gap-4 mb-10">
+                    <div className="flex gap-3 mb-6">
+                      <div className="flex-1 p-4 rounded-3xl bg-white/5 border border-white/5">
+                        <div className="text-[10px] uppercase tracking-widest opacity-40 font-bold mb-1">
+                          Rank
+                        </div>
+                        <div className="text-2xl font-black">
+                          #{currentIndex + 1}
+                        </div>
+                      </div>
                       <div className="flex-1 p-4 rounded-3xl bg-white/5 border border-white/5">
                         <div className="text-[10px] uppercase tracking-widest opacity-40 font-bold mb-1">
                           Total Stars
                         </div>
-                        <div
-                          className="text-2xl font-black"
-                          style={{ color: theme.accentColor }}
-                        >
-                          {stars}
+                        <div className="text-2xl font-black">
+                          {formatStars(stars)}
                         </div>
                       </div>
                       <div className="flex-1 p-4 rounded-3xl bg-white/5 border border-white/5">
@@ -751,73 +756,33 @@ export default function App() {
                           className="text-2xl font-black"
                           style={{ color: theme.accentColor }}
                         >
-                          +{starsToday}
+                          +{formatStars(starsToday)}
                         </div>
                       </div>
                     </div>
 
                     {/* Main Content (README Summary) */}
-                    <div className="flex-1 flex items-center justify-start text-left relative">
-                      {isAiGenerating ? (
-                        <div className="w-full space-y-4 animate-pulse">
-                          <div className="h-8 bg-white/5 rounded-lg w-3/4"></div>
-                          <div className="h-8 bg-white/5 rounded-lg w-full"></div>
-                          <div className="h-8 bg-white/5 rounded-lg w-2/3"></div>
-                        </div>
-                      ) : (
-                        <div
-                          className="text-[clamp(1.1rem,3.2vw,1.8rem)] font-black leading-[1.3] tracking-tight"
-                          dangerouslySetInnerHTML={{ __html: highlightedHtml }}
-                        />
-                      )}
+                    <div className="flex-1 flex flex-col min-h-0 mb-6">
+                      <div
+                        className="text-[clamp(1rem,2.8vw,1.5rem)] font-bold leading-snug tracking-tight overflow-hidden line-clamp-[14]"
+                        dangerouslySetInnerHTML={{ __html: highlightedHtml }}
+                      />
                     </div>
 
-                    {/* Footer */}
-                    <div className="flex justify-between pt-8 mt-4 border-t border-white/5">
-                      {(() => {
-                        const tags = highlightWords
-                          .split(",")
-                          .map((s) => s.trim())
-                          .filter(Boolean);
-                        if (tags.length === 0) {
-                          return <div className="flex-1" />;
-                        }
-                        const maxTags = 6;
-                        const displayTags = tags.slice(0, maxTags);
-                        const hasMore = tags.length > maxTags;
-                        return (
-                          <div className="text-left flex-1 flex flex-col justify-between">
-                            <div className="text-sm font-bold tracking-tighter opacity-30 mb-1">
-                              标签
-                            </div>
-                            <div className="tmp-my-3 flex flex-wrap gap-1">
-                              {displayTags.map((tag, i) => (
-                                <span
-                                  key={i}
-                                  className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-xs font-bold uppercase tracking-wider opacity-60"
-                                >
-                                  {tag}
-                                </span>
-                              ))}
-                              {hasMore && (
-                                <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-xs font-bold uppercase tracking-wider opacity-60">
-                                  ……
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })()}
-                      <div className="text-right flex-1 flex flex-col justify-between">
-                        <div className="text-sm font-bold tracking-tighter opacity-30 mb-1">
-                          GITHUB TRENDING
-                        </div>
-                        <div
-                          className="text-4xl font-black italic tracking-tighter"
-                          style={{ color: theme.accentColor }}
-                        >
-                          #{currentIndex + 1}
-                        </div>
+                    {/* Tags Section - Bottom */}
+                    <div className="pt-6 border-t border-white/5">
+                      <div className="text-[10px] uppercase tracking-widest opacity-40 font-bold mb-2">
+                        Topics
+                      </div>
+                      <div className="flex flex-wrap gap-1.5 max-h-[60px] overflow-hidden">
+                        {keywordList.slice(0, 20).map((tag, i) => (
+                          <span
+                            key={i}
+                            className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-[10px] font-bold uppercase tracking-wider opacity-70"
+                          >
+                            {tag}
+                          </span>
+                        ))}
                       </div>
                     </div>
                   </>
@@ -887,31 +852,63 @@ export default function App() {
           </div>
 
           {layoutMode === "index" && (
-            <div className="w-full mt-6 flex flex-col gap-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
-                  今日趋势大总结
-                </span>
-                <button
-                  onClick={async () => {
-                    try {
-                      await navigator.clipboard.writeText(globalSummary);
-                      setStatusMsg("已复制到剪贴板");
-                      setTimeout(() => setStatusMsg(null), 2000);
-                    } catch {
-                      setStatusMsg("复制失败");
-                    }
-                  }}
-                  className="px-3 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-bold text-cyan-400 transition-colors border border-white/5"
-                >
-                  一键复制
-                </button>
+            <div className="w-full mt-6 flex flex-col gap-4">
+              {/* Summary Section */}
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
+                    今日趋势大总结
+                  </span>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const urls = trendingData.map((item: any) => `https://github.com/${item.title}`).join("\n");
+                        await navigator.clipboard.writeText(globalSummary + "\n\n" + globalHashtags + "\n\n" + urls);
+                        setStatusMsg("已复制到剪贴板");
+                        setTimeout(() => setStatusMsg(null), 2000);
+                      } catch {
+                        setStatusMsg("复制失败");
+                      }
+                    }}
+                    className="px-3 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-bold text-cyan-400 transition-colors border border-white/5"
+                  >
+                    一键复制
+                  </button>
+                </div>
+                <textarea
+                  readOnly
+                  value={globalSummary}
+                  className="w-full h-24 bg-zinc-900/50 border border-white/10 rounded-xl p-3 text-xs text-zinc-300 outline-none resize-none focus:border-cyan-400/40 transition-colors"
+                />
               </div>
-              <textarea
-                readOnly
-                value={globalSummary}
-                className="w-full h-24 bg-zinc-900/50 border border-white/10 rounded-xl p-3 text-xs text-zinc-300 outline-none resize-none focus:border-cyan-400/40 transition-colors"
-              />
+
+              {/* Hashtags Section */}
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
+                    自动生成话题 (#Hashtags)
+                  </span>
+                  <button
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(globalHashtags);
+                        setStatusMsg("已复制话题");
+                        setTimeout(() => setStatusMsg(null), 2000);
+                      } catch {
+                        setStatusMsg("复制失败");
+                      }
+                    }}
+                    className="px-3 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-bold text-cyan-400 transition-colors border border-white/5"
+                  >
+                    复制话题
+                  </button>
+                </div>
+                <textarea
+                  readOnly
+                  value={globalHashtags}
+                  className="w-full h-16 bg-zinc-900/50 border border-white/10 rounded-xl p-3 text-xs text-cyan-400/80 outline-none resize-none focus:border-cyan-400/40 transition-colors font-mono"
+                />
+              </div>
             </div>
           )}
 
