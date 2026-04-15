@@ -1,23 +1,25 @@
 # STATE.md
 
-## Current Milestone: v1.1 新版本 with sqlite
-- **Phase:** Completed
-- **Status:** Done
+## Current Milestone: v1.2-自动化发布实现
+- **Phase:** Phase 6: 历史数据加载机制
+- **Status:** Initializing
 
 ## Task Tracking
-- [x] Task 4.1: Install `better-sqlite3` and create the initial database schema (projects, summaries, global state).
-- [x] Task 4.2: Refactor backend APIs to store fetched data and summaries in the DB and implement a "load from cache" endpoint.
-- [x] Task 4.3: Update the global summary AI prompt to strictly output plain text (no Markdown).
-- [x] Task 4.4: Add frontend buttons/logic to choose between cached data and forced regeneration.
-- [x] Task 5.1: Implement a `platform_sessions` table and backend logic to save/load browser cookies for Xiaohongshu and Douyin.
-- [x] Task 5.2: Create a settings UI component to input, save, and verify these platform cookies.
-- [x] Task 5.3: Perform a test browser launch that correctly injects the saved cookies for one of the target platforms.
+- [ ] Task 6.1: Refactor backend `/api/cache` endpoint to support a `date` query parameter.
+- [ ] Task 6.2: Add a Date Picker component to the sidebar UI in `App.tsx`.
+- [ ] Task 6.3: Implement frontend logic to re-trigger data loading when the date is changed.
+- [ ] Task 7.1: Implement image upload logic (sequentially handling `0.png` onwards).
+- [ ] Task 7.2: Implement metadata injection (date-based title, summary, hashtags).
+- [ ] Task 7.3: Automate collection and music selection steps.
+- [ ] Task 8.1: Implement image upload and geolocation permission handling.
+- [ ] Task 8.2: Implement content injection (title, rich-text description, tags).
+- [ ] Task 8.3: Automate "Original Declaration" and collection selection.
 
 ## Key Decisions
-- [Decided] Use `better-sqlite3` for fast, synchronous SQLite operations in the Node.js backend.
-- [Decided] Store authentication cookies in SQLite to enable persistent sessions for automated social media posting.
-- [Decided] Disallow Markdown in global summaries to ensure compatibility across all social platforms.
+- [Decided] Use `input type="date"` for simplicity in historical data navigation.
+- [Decided] Playwright scripts will use the saved `storageState` from the database to bypass manual login.
+- [Decided] Automation will target specific creator studio selectors identified in `step.text`.
 
 ## Notes
-- `v1.0` successfully implemented README-based AI summaries and sequential processing.
-- Current AI model: Local Ollama (gemma4:e2b).
+- v1.1 established the database schema and session capturing foundation.
+- v1.2 focuses on the final execution of the automation flow.

@@ -12,12 +12,13 @@ A React + Vite + TypeScript app exported from Google AI Studio. It generates soc
 ## History
 - **Initial Version:** Scrapes GitHub Trending, fetches tags using Playwright, provides 12 visual templates, supports high-res PNG export.
 - **v1.0 detail中的总结优化:** Optimized detail view summaries by fetching project READMEs and generating AI-powered Chinese summaries sequentially. Added Global Summary and hashtags generation.
+- **v1.1 新版本 with sqlite:** Integrated `better-sqlite3` for local data persistence. Improved global summary formatting (removed Markdown). Established foundation for automated posting (cookie management).
 
-## Milestone: v1.1 新版本 with sqlite
+## Milestone: v1.2-自动化发布实现
 - **Status:** Planning
-- **Goal:** Introduce data persistence, improve summary formatting, and lay the foundation for automated social media posting.
+- **Goal:** Implement historical data loading via date selection and full automated publishing to Douyin and Xiaohongshu based on precise manual steps.
 
 ### Objectives
-1. **SQLite Integration (`better-sqlite3`):** Store trending projects, AI summaries, and hashtags locally to avoid re-fetching and losing data on refresh. Add UI controls to choose between loading cached data or regenerating it.
-2. **Clean Global Summary:** Ensure the AI-generated "Today's Trend Summary" is plain text without Markdown formatting, making it compatible with more social media platforms.
-3. **Playwright Automation Foundation:** Create a feature to store and manage authentication cookies for Xiaohongshu and Douyin, enabling future automated browser launches and posting.
+1. **Historical Data Loading:** Add a date picker UI to allow loading projects and summaries from SQLite for any previous day. Ensure data is organized by date.
+2. **Douyin Automation:** Implement complete Playwright automation for Douyin creator studio, including image uploads, metadata entry, collection selection, and music choice.
+3. **Xiaohongshu Automation:** Implement complete Playwright automation for Xiaohongshu, handling geolocation permission prompts, bulk image uploads, and original content declaration.
