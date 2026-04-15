@@ -16,15 +16,32 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  async function fetchReadmeContent(owner: string, repo: string): Promise<string> {
+  async function fetchReadmeContent(owner: string, repo: string, retries = 3): Promise<string> {
     const GITHUB_PAT = process.env.GITHUB_PAT;
-    const response = await axios.get(`https://api.github.com/repos/${owner}/${repo}/readme`, {
-      headers: {
-        ...(GITHUB_PAT ? { Authorization: `token ${GITHUB_PAT}` } : {}),
-        Accept: "application/vnd.github.v3.raw"
+    for (let i = 0; i < retries; i++) {
+      try {
+        const response = await axios.get(`https://api.github.com/repos/${owner}/${repo}/readme`, {
+          headers: {
+            ...(GITHUB_PAT ? { Authorization: `token ${GITHUB_PAT}` } : {}),
+            Accept: "application/vnd.github.v3.raw"
+          },
+          timeout: 15000
+        });
+        return response.data;
+      } catch (error: any) {
+        const status = error.response?.status;
+        const isRetryable = status === 502 || status === 503 || status === 504 || error.code === 'ECONNABORTED';
+        
+        if (!isRetryable || i === retries - 1) {
+          throw error;
+        }
+        
+        const delay = Math.pow(2, i) * 2000; // 2s, 4s, 8s
+        console.warn(`[API] Fetching README failed (${status || error.code}), retrying in ${delay}ms... (${i + 1}/${retries})`);
+        await new Promise(resolve => setTimeout(resolve, delay));
       }
-    });
-    return response.data;
+    }
+    throw new Error("Failed to fetch README after retries");
   }
 
   async function generateReadmeSummary(readmeText: string): Promise<{ summary: string, keywords: string }> {
@@ -33,7 +50,7 @@ async function startServer() {
       baseURL: "https://integrate.api.nvidia.com/v1",
     });
     const summarizePayload = {
-      model: "deepseek-ai/deepseek-v3.1",
+      model: "deepseek-ai/deepseek-v3",
       messages: [
         {
           role: "system" as const,
@@ -243,14 +260,23 @@ ${readmeText.substring(0, 5000)}
         apiKey: process.env.NVIDIA_API_KEY || "",
         baseURL: "https://integrate.api.nvidia.com/v1",
       });
-      const contents = `你是一个资深的开源趋势观察员。请根据以下今日 GitHub Trending 的项目列表，生成一段极其精炼的“今日趋势大总结”。\n\n项目列表：\n${projects.map((item: any) => `${item.title}: ${item.aiSummary || item.content}`).join("\n")}\n\n请直接返回总结文本。`;
+      const contents = `你是一个资深的开源趋势观察员。请根据以下今日 GitHub Trending 的项目列表，生成一段极其精炼的“今日趋势大总结”以及 5 个用于社交媒体传播的 #话题。
+
+项目列表：
+${projects.map((item: any) => `${item.title}: ${item.aiSummary || item.content}`).join("\n")}
+
+请以 JSON 格式返回，格式如下：
+{
+  "summary": "这里是今日趋势的深度总结文字...",
+  "hashtags": ["#话题1", "#话题2", "#话题3", "#话题4", "#话题5"]
+}`;
       const globalPayload = {
-        model: "deepseek-ai/deepseek-v3.1",
+        model: "deepseek-ai/deepseek-v3",
         messages: [
           {
             role: "system" as const,
             content:
-              "You are a helpful assistant. Always respond with plain text only, no markdown formatting.",
+              "You are a helpful assistant. Always respond with valid JSON only, no markdown formatting, no code blocks.",
           },
           {
             role: "user" as const,
@@ -263,9 +289,24 @@ ${readmeText.substring(0, 5000)}
       };
       console.log(`curl -X POST https://integrate.api.nvidia.com/v1/chat/completions \\\n  -H "Authorization: Bearer $NVIDIA_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d '${JSON.stringify(globalPayload)}'`);
       const completion = await openai.chat.completions.create(globalPayload);
-      const summaryText = completion.choices[0]?.message?.content || "";
+      const textBlock = completion.choices[0]?.message?.content || "";
+      let result: any = {};
+      try {
+        result = JSON.parse(textBlock || "{}");
+      } catch (e) {
+        const match = textBlock?.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+        if (match) {
+          result = JSON.parse(match[1]);
+        }
+      }
+      const summaryText = result.summary || "";
+      const hashtags = Array.isArray(result.hashtags) ? result.hashtags.join(" ") : "";
       const urls = projects.map((item: any) => `https://github.com/${item.title}`).join("\n");
-      res.json({ summary: summaryText + (summaryText ? "\n\n" : "") + urls });
+      res.json({ 
+        summary: summaryText, 
+        hashtags: hashtags,
+        fullContent: summaryText + (summaryText ? "\n\n" : "") + hashtags + "\n\n" + urls 
+      });
     } catch (error: any) {
       console.error("NVIDIA global summary error:", error?.message || error);
       res.status(500).json({ error: "Failed to generate global summary" });
