@@ -1,23 +1,19 @@
 # STATE.md
 
-## Current Milestone: v1.3-代码重构与架构优化
-- **Phase:** Completed
-- **Status:** Done
+## Current Milestone: v1.4-细节打磨与功能扩展
+- **Phase:** Phase 11: 侧边栏布局与导航打磨
+- **Status:** Initializing
 
 ## Task Tracking
-- [x] Task 9.1: Create `server/services` directory and migrate logic into `dbService.ts`, `aiService.ts`, `githubService.ts`, and `platformService.ts`.
-- [x] Task 9.2: Create `server/routes/api.ts` and migrate all Express routes.
-- [x] Task 9.3: Clean up `server.ts` to act as a lightweight entry point.
-- [x] Task 10.1: Move constants and helper functions to `src/constants.ts` and `src/utils.ts`.
-- [x] Task 10.2: Extract state management and API orchestration into `src/hooks/useAppLogic.ts`.
-- [x] Task 10.3: Create UI components: `Sidebar`, `IndexCard`, `DetailCard`, and `PreviewPanel`.
-- [x] Task 10.4: Simplify `App.tsx` to a high-level layout container.
+- [ ] Task 11.1: Upgrade the date input to a custom styled date component.
+- [ ] Task 11.2: Reorder sidebar sections (Move Distribution Beta above Hashtags).
+- [ ] Task 11.3: Fix the Export button to the bottom of the sidebar.
+- [ ] Task 11.4: Implement independent scrolling for the sidebar content.
 
 ## Key Decisions
-- [Decided] Adopt a service-oriented architecture for the backend to isolate Playwright and AI logic.
-- [Decided] Use a single custom Hook (`useAppLogic`) to maintain synchronous state across multiple components.
-- [Decided] Strictly adhere to the directory structure: `server/services`, `server/routes`, `src/components`, `src/hooks`.
+- [Decided] Use a flex-column layout for the sidebar to support fixed footer and scrollable body.
+- [Decided] Maintain the existing `custom-scrollbar` aesthetic for sidebar scrolling.
 
 ## Notes
-- v1.2 successfully delivered all automated distribution features.
-- Refactoring aims to make the ~1200 line App.tsx and ~600 line server.ts manageable.
+- v1.3 completed the modular refactoring, paving the way for these UI refinements.
+- Focus is on professionalizing the interface without changing core functionality.

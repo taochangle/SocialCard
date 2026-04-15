@@ -1,32 +1,29 @@
 # REQUIREMENTS.md
 
-## Milestone: v1.3-代码重构与架构优化
+## Milestone: v1.4-细节打磨与功能扩展
 
 ### Goal
-Refactor the codebase to separate concerns, making it easier to maintain, test, and extend.
+Refine the user interface to ensure a smoother and more professional user experience, focusing on sidebar navigation and action layout.
 
 ### Functional Requirements
 
-1. **Backend Modularization (`server.ts`)**
-   - **Service Layer (`server/services/`):**
-     - `databaseService.ts`: Manage SQLite connections and queries.
-     - `aiService.ts`: Handle local Ollama interaction and parsing.
-     - `githubService.ts`: Manage GitHub Trending scraping and README/Tags retrieval.
-     - `platformService.ts`: Implement Douyin and Xiaohongshu automation flows.
-   - **Route Layer (`server/routes/`):**
-     - `apiRoutes.ts`: Define all REST endpoints, delegating logic to services.
-   - **Entry Point:** `server.ts` should only contain Express setup and middleware registration.
+1. **Enhanced Date Component**
+   - Replace the default `<input type="date">` with a more visually consistent component.
+   - The component should allow for easy day selection and clearly display the currently selected date.
 
-2. **Frontend Componentization (`src/App.tsx`)**
-   - **State & Logic Hook (`src/hooks/useAppLogic.ts`):** Centralize all `useState`, `useMemo`, and async API logic.
-   - **Shared Components (`src/components/`):**
-     - `Sidebar.tsx`: Control panel, template picker, and distribution buttons.
-     - `PreviewPanel.tsx`: Container for the card preview.
-     - `IndexCard.tsx`: Visual layout for the 15-project overview.
-     - `DetailCard.tsx`: Visual layout for individual project details.
-   - **Constants:** Move `TEMPLATES` and mocks to `src/constants.ts`.
+2. **Scrollable Sidebar Content**
+   - The sidebar must support vertical scrolling when its content exceeds the viewport height.
+   - The scrollbar should be styled to match the app's aesthetic (using `custom-scrollbar`).
+
+3. **Section Reordering**
+   - Move the "One-click Distribution (Beta)" (一键分发) section to the bottom of the sidebar list.
+   - Ensure it is positioned just above the "Hashtags" section.
+
+4. **Fixed Export Footer**
+   - The "Export 3:4 High-res Image" (导出 3:4 高清图) button must be fixed at the bottom of the sidebar.
+   - It should remain visible and accessible even when the sidebar content is scrolled.
 
 ### Non-Functional Requirements
-- **Consistency:** Maintain all existing features (scraping, caching, automation) without regression.
-- **Readability:** Individual files should generally stay under 300-400 lines where possible.
-- **Type Safety:** Ensure all props and service return types are strictly defined in `src/types.ts` or corresponding backend type files.
+- **Responsive Consistency:** The sidebar behavior must remain robust across different screen sizes (desktop vs mobile).
+- **Smooth Animation:** Any UI transitions (e.g., date component interactions) should be smooth.
+- **Independent Layout:** Sidebar scrolling should not affect the scrolling or layout of the right-side preview panel.
