@@ -13,12 +13,13 @@ A React + Vite + TypeScript app exported from Google AI Studio. It generates soc
 - **Initial Version:** Scrapes GitHub Trending, fetches tags using Playwright, provides 12 visual templates, supports high-res PNG export.
 - **v1.0 detail中的总结优化:** Optimized detail view summaries by fetching project READMEs and generating AI-powered Chinese summaries sequentially. Added Global Summary and hashtags generation.
 - **v1.1 新版本 with sqlite:** Integrated `better-sqlite3` for local data persistence. Improved global summary formatting (removed Markdown). Established foundation for automated posting (cookie management).
+- **v1.2-自动化发布实现:** Implemented historical data loading via date selection and full Playwright automation for Douyin and Xiaohongshu publishing based on manual steps.
 
-## Milestone: v1.2-自动化发布实现
+## Milestone: v1.3-代码重构与架构优化
 - **Status:** Planning
-- **Goal:** Implement historical data loading via date selection and full automated publishing to Douyin and Xiaohongshu based on precise manual steps.
+- **Goal:** Improve maintainability and scalability by decomposing large single-file components and server logic into modular structures.
 
 ### Objectives
-1. **Historical Data Loading:** Add a date picker UI to allow loading projects and summaries from SQLite for any previous day. Ensure data is organized by date.
-2. **Douyin Automation:** Implement complete Playwright automation for Douyin creator studio, including image uploads, metadata entry, collection selection, and music choice.
-3. **Xiaohongshu Automation:** Implement complete Playwright automation for Xiaohongshu, handling geolocation permission prompts, bulk image uploads, and original content declaration.
+1. **Server-side Refactoring:** Split `server.ts` into separate modules for Routes (API definitions) and Services (Business logic for AI, GitHub scraping, Platform automation, and Database).
+2. **Client-side Componentization:** Break down `App.tsx` into smaller, focused React components and a custom Hook (`useAppLogic`) to manage complex states and API interactions.
+3. **Architecture Standard:** Establish a clear directory structure for future feature expansion.

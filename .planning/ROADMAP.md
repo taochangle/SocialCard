@@ -6,28 +6,24 @@
 ## Milestone: v1.1 新版本 with sqlite (Completed)
 ...
 
-## Milestone: v1.2-自动化发布实现
+## Milestone: v1.2-自动化发布实现 (Completed)
+...
 
-### Phase 6: 历史数据加载机制 (Historical Data Loading)
-- **Goal:** Allow users to browse and load data from any previous day stored in SQLite.
-- **Tasks:**
-    - [x] **Task 6.1:** Refactor backend `/api/cache` endpoint to support a `date` query parameter.
-    - [x] **Task 6.2:** Add a Date Picker component to the sidebar UI in `App.tsx`.
-    - [x] **Task 6.3:** Implement frontend logic to re-trigger data loading when the date is changed.
-- **Success Criteria:** Selecting a previous date in the UI instantly populates the project list and summaries with that day's data.
+## Milestone: v1.3-代码重构与架构优化
 
-### Phase 7: 抖音自动化发布 (Douyin Automation)
-- **Goal:** Implement the full Playwright script for Douyin based on `step.text`.
+### Phase 9: 后端模块化 (Backend Modularization)
+- **Goal:** Split `server.ts` into a cleaner service-oriented architecture.
 - **Tasks:**
-    - [x] **Task 7.1:** Implement image upload logic (sequentially handling `0.png` onwards).
-    - [x] **Task 7.2:** Implement metadata injection (date-based title, summary, hashtags).
-    - [x] **Task 7.3:** Automate collection and music selection steps.
-- **Success Criteria:** Clicking "Auto Publish" for Douyin successfully completes the entire creation flow up to the final publish button.
+    - [ ] **Task 9.1:** Create `server/services` directory and migrate logic into `dbService.ts`, `aiService.ts`, `githubService.ts`, and `platformService.ts`.
+    - [ ] **Task 9.2:** Create `server/routes/api.ts` and migrate all Express routes.
+    - [ ] **Task 9.3:** Clean up `server.ts` to act as a lightweight entry point.
+- **Success Criteria:** The server runs without errors and all existing API endpoints return correct data.
 
-### Phase 8: 小红书自动化发布 (Xiaohongshu Automation)
-- **Goal:** Implement the full Playwright script for Xiaohongshu based on `step.text`.
+### Phase 10: 前端组件化 (Frontend Componentization)
+- **Goal:** Break down `App.tsx` into a custom Hook and specialized components.
 - **Tasks:**
-    - [x] **Task 8.1:** Implement image upload and geolocation permission handling.
-    - [x] **Task 8.2:** Implement content injection (title, rich-text description, tags).
-    - [x] **Task 8.3:** Automate "Original Declaration" and collection selection.
-- **Success Criteria:** Clicking "Auto Publish" for Xiaohongshu successfully navigates through the creation UI and prepares the note for publishing.
+    - [ ] **Task 10.1:** Move constants and helper functions to `src/constants.ts` and `src/utils.ts`.
+    - [ ] **Task 10.2:** Extract state management and API orchestration into `src/hooks/useAppLogic.ts`.
+    - [ ] **Task 10.3:** Create UI components: `Sidebar`, `IndexCard`, `DetailCard`, and `PreviewPanel`.
+    - [ ] **Task 10.4:** Simplify `App.tsx` to a high-level layout container.
+- **Success Criteria:** The application UI remains identical in behavior and appearance, but the code is distributed across focused files.

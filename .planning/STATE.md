@@ -1,26 +1,23 @@
 # STATE.md
 
-## Current Milestone: v1.2-自动化发布实现
-- **Phase:** Completed
-- **Status:** Done
+## Current Milestone: v1.3-代码重构与架构优化
+- **Phase:** Phase 9: 后端模块化
+- **Status:** Initializing
 
 ## Task Tracking
-- [x] Task 6.1: Refactor backend `/api/cache` endpoint to support a `date` query parameter.
-- [x] Task 6.2: Add a Date Picker component to the sidebar UI in `App.tsx`.
-- [x] Task 6.3: Implement frontend logic to re-trigger data loading when the date is changed.
-
-- [x] Task 7.1: Implement image upload logic (sequentially handling `0.png` onwards).
-- [x] Task 7.2: Implement metadata injection (date-based title, summary, hashtags).
-- [x] Task 7.3: Automate collection and music selection steps.
-- [x] Task 8.1: Implement image upload and geolocation permission handling.
-- [x] Task 8.2: Implement content injection (title, rich-text description, tags).
-- [x] Task 8.3: Automate "Original Declaration" and collection selection.
+- [ ] Task 9.1: Create `server/services` directory and migrate logic into `dbService.ts`, `aiService.ts`, `githubService.ts`, and `platformService.ts`.
+- [ ] Task 9.2: Create `server/routes/api.ts` and migrate all Express routes.
+- [ ] Task 9.3: Clean up `server.ts` to act as a lightweight entry point.
+- [ ] Task 10.1: Move constants and helper functions to `src/constants.ts` and `src/utils.ts`.
+- [ ] Task 10.2: Extract state management and API orchestration into `src/hooks/useAppLogic.ts`.
+- [ ] Task 10.3: Create UI components: `Sidebar`, `IndexCard`, `DetailCard`, and `PreviewPanel`.
+- [ ] Task 10.4: Simplify `App.tsx` to a high-level layout container.
 
 ## Key Decisions
-- [Decided] Use `input type="date"` for simplicity in historical data navigation.
-- [Decided] Playwright scripts will use the saved `storageState` from the database to bypass manual login.
-- [Decided] Automation will target specific creator studio selectors identified in `step.text`.
+- [Decided] Adopt a service-oriented architecture for the backend to isolate Playwright and AI logic.
+- [Decided] Use a single custom Hook (`useAppLogic`) to maintain synchronous state across multiple components.
+- [Decided] Strictly adhere to the directory structure: `server/services`, `server/routes`, `src/components`, `src/hooks`.
 
 ## Notes
-- v1.1 established the database schema and session capturing foundation.
-- v1.2 focuses on the final execution of the automation flow.
+- v1.2 successfully delivered all automated distribution features.
+- Refactoring aims to make the ~1200 line App.tsx and ~600 line server.ts manageable.
