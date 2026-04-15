@@ -80,30 +80,15 @@ router.post("/summarize", async (req, res) => {
 router.post("/global-summary", async (req, res) => {
   const { projects, date } = req.body;
   const targetDate = (date as string) || new Date().toISOString().split("T")[0];
-  const contents = `你是一个资深的开源趋势观察员。请根据以下今日 GitHub Trending 的项目列表，生成一段极其精炼的“今日趋势大总结”以及 5 个用于社交媒体传播的 #话题。
-
-要求：
-1. 总结文字必须是纯文本，**绝对不要使用任何 Markdown 格式**（如 #, *, **, [ ], > 等）。
-2. 直接返回文字内容。
-
-项目列表：
-${projects.map((item: any) => `${item.title}: ${item.aiSummary || item.content}`).join("\n")}
-
-请以 JSON 格式返回，格式如下：
-{
-  "summary": "这里是今日趋势的深度总结文字...",
-  "hashtags": ["#话题1", "#话题2", "#话题3", "#话题4", "#话题5"]
-}`;
 
   try {
-    const data = await aiService.callOllama(contents);
-    const summaryText = data.summary || "";
-    const hashtags = Array.isArray(data.hashtags) ? data.hashtags.join(" ") : "";
-    dbService.saveGlobalState(targetDate, summaryText, hashtags);
+    const { summary, hashtags } = await aiService.generateGlobalSummary(projects);
+    dbService.saveGlobalState(targetDate, summary, hashtags);
+    
     res.json({ 
-      summary: summaryText, 
+      summary: summary, 
       hashtags: hashtags,
-      fullContent: summaryText + (summaryText ? "\n\n" : "") + hashtags + "\n\n" + projects.map((item: any) => `https://github.com/${item.title}`).join("\n")
+      fullContent: summary + (summary ? "\n\n" : "") + hashtags + "\n\n" + projects.map((item: any) => `https://github.com/${item.title}`).join("\n")
     });
   } catch (error: any) {
     res.status(500).json({ error: error.message });

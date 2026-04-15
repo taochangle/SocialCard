@@ -1,25 +1,31 @@
-import axios from "axios";
+import OpenAI from "openai";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const openai = new OpenAI({
+  baseURL: process.env.AI_BASE_URL || "http://localhost:11434/v1",
+  apiKey: process.env.AI_API_KEY || "ollama", // Ollama usually doesn't need a key but SDK requires it
+});
 
 export const aiService = {
-  async callOllama(prompt: string): Promise<any> {
+  async callAI(prompt: string): Promise<any> {
+    const model = process.env.AI_MODEL || "gemma4:e2b";
     try {
-      console.log(`[AI] Calling local Ollama (gemma4:e2b)...`);
-      const response = await axios.post("http://localhost:11434/api/chat", {
-        model: "gemma4:e2b",
+      console.log(`[AI] Calling ${model} via OpenAI SDK...`);
+      const response = await openai.chat.completions.create({
+        model: model,
         messages: [{ role: "user", content: prompt }],
-        stream: false,
-        format: "json",
-        options: {
-          temperature: 0.2,
-          top_p: 0.7,
-        }
-      }, { timeout: 60000 });
+        response_format: { type: "json_object" },
+        temperature: 0.2,
+        top_p: 0.7,
+      });
 
-      const content = response.data.message.content;
+      const content = response.choices[0]?.message?.content || "{}";
       try {
         return JSON.parse(content);
       } catch (e) {
-        console.error("[AI] Failed to parse Ollama JSON response:", content);
+        console.error("[AI] Failed to parse JSON response:", content);
         // Fallback: try regex
         const summaryMatch = content.match(/"summary":\s*"([\s\S]*?)"/);
         const keywordsMatch = content.match(/"keywords":\s*"([\s\S]*?)"/);
@@ -31,7 +37,7 @@ export const aiService = {
         };
       }
     } catch (error: any) {
-      console.error("[AI] Ollama API error:", error.message);
+      console.error("[AI] OpenAI SDK error:", error.message);
       throw error;
     }
   },
@@ -53,11 +59,37 @@ ${readmeText.substring(0, 10000)}
   "keywords": "关键词1,关键词2..."
 }`;
 
-    const data = await this.callOllama(prompt);
+    const data = await this.callAI(prompt);
 
     return {
       summary: data.summary || "",
       keywords: data.keywords || "",
+    };
+  },
+
+  async generateGlobalSummary(projects: any[]): Promise<{ summary: string, hashtags: string }> {
+    const contents = `你是一个资深的开源趋势观察员。请根据以下今日 GitHub Trending 的项目列表，生成一段极其精炼的“今日趋势大总结”以及 5 个用于社交媒体传播的 #话题。
+
+要求：
+1. 总结文字必须是纯文本，**绝对不要使用任何 Markdown 格式**（如 #, *, **, [ ], > 等）。
+2. 直接返回文字内容。
+
+项目列表：
+${projects.map((item: any) => `${item.title}: ${item.aiSummary || item.content}`).join("\n")}
+
+请以 JSON 格式返回，格式如下：
+{
+  "summary": "这里是今日趋势的深度总结文字...",
+  "hashtags": ["#话题1", "#话题2", "#话题3", "#话题4", "#话题5"]
+}`;
+
+    const data = await this.callAI(contents);
+    const summaryText = data.summary || "";
+    const hashtags = Array.isArray(data.hashtags) ? data.hashtags.join(" ") : "";
+
+    return {
+      summary: summaryText,
+      hashtags: hashtags
     };
   }
 };
