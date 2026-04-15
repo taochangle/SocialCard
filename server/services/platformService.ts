@@ -113,19 +113,29 @@ export const platformService = {
         }
 
 
-        // 10. 选择音乐 (使用 action- 前缀选择器)
+        // 10. 选择音乐 (使用精确类名链路)
         console.log("[Publish] Selecting music...");
         try {
+          // Target span with class containing action- and text "选择音乐"
           const musicBtn = await page.locator('span[class*="action-"]:has-text("选择音乐")').first();
           await musicBtn.click();
           await page.waitForTimeout(2000);
-          
-          await page.getByText('飙升榜').first().click();
+
+          // 根据用户提供的链路选择第一个音乐卡片
+          console.log("[Publish] Clicking the first music card...");
+          const musicCard = await page.locator('.semi-tabs-pane-motion-overlay .music-collection-container-cTsB7J .card-container-tmocjc').first();
+          await musicCard.click();
           await page.waitForTimeout(1500);
-          await page.locator('.music-item-use-btn').first().click();
+
+          // 确认使用（如果需要点击“使用”按钮，保留原有逻辑作为回退或补充）
+          const useBtn = await page.locator('.music-item-use-btn').first();
+          if (await useBtn.isVisible()) {
+            await useBtn.click();
+          }
         } catch (e) {
           console.warn("[Publish] Could not select music:", e.message);
         }
+
 
         console.log("[Publish] Ready to publish!");
         
