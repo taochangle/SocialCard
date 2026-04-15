@@ -98,17 +98,19 @@ export const platformService = {
           await page.keyboard.press('Enter');
           await page.waitForTimeout(500);
         }
-// 9. 选择合集 (使用精准选择器)
-console.log("[Publish] Selecting collection...");
-try {
-  const selectTrigger = await page.waitForSelector('.semi-select.semi-select-single', { timeout: 5000 });
-  await selectTrigger.click();
-  await page.waitForTimeout(1000);
-  const option = await page.locator('.semi-select-option').filter({ hasText: 'Github Trending' }).first();
-  await option.click();
-} catch (e) {
-  console.warn("[Publish] Could not select collection:", e.message);
-}
+        // 9. 选择合集 (使用精准选择器)
+        console.log("[Publish] Selecting collection...");
+        try {
+          // 先寻找包含“不选择合集”文字的下拉框触发器
+          const selectTrigger = await page.locator('.semi-select:has-text("不选择合集")').first();
+          await selectTrigger.click();
+          await page.waitForTimeout(1000);
+          // 在弹出的选项中寻找 "Github Trending"
+          const option = await page.locator('.semi-select-option').filter({ hasText: 'Github Trending' }).first();
+          await option.click();
+        } catch (e) {
+          console.warn("[Publish] Could not select collection:", e.message);
+        }
 
 
         // 10. 选择音乐 (使用 action- 前缀选择器)
