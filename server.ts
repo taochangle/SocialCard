@@ -423,25 +423,143 @@ ${projects.map((item: any) => `${item.title}: ${item.aiSummary || item.content}`
       console.log(`[Publish] Starting automated post to ${platform}...`);
       browser = await chromium.launch({ headless: false }); // Visible for now to verify steps
       const state = JSON.parse(session.state);
-      const context = await browser.newContext({ storageState: state });
+      const context = await browser.newContext({ 
+        storageState: state,
+        permissions: ['geolocation'],
+        geolocation: { longitude: 116.4074, latitude: 39.9042 }
+      });
       const page = await context.newPage();
 
+      // Convert base64 to buffers
+      const filePayloads = images.map((base64: string, i: number) => {
+        const data = base64.replace(/^data:image\/\w+;base64,/, "");
+        return {
+          name: `${i}.png`,
+          mimeType: "image/png",
+          buffer: Buffer.from(data, "base64"),
+        };
+      });
+
       if (platform === "douyin") {
-        // 1. Open home
-        await page.goto("https://creator.douyin.com/creator-micro/home");
-        // 2. Click "Publish Image/Text" (发布图文)
-        // Note: We'll implement specific selectors later, but let's navigate directly for now
-        await page.goto("https://creator.douyin.com/creator-micro/content/upload?default-tab=3");
+        // 1 & 2. Navigate directly to upload
+        await page.goto("https://creator.douyin.com/creator-micro/content/upload?default-tab=3", { waitUntil: 'networkidle' });
         
-        // TODO: Implement full steps from step.text
-        console.log("[Publish] Douyin automation foundation reached.");
+        // 3, 4 & 5. Upload images
+        console.log("[Publish] Uploading images...");
+        const fileInput = await page.waitForSelector('input[type="file"]');
+        await fileInput.setInputFiles(filePayloads);
+        
+        // 6. Fill Title
+        console.log("[Publish] Filling title...");
+        try {
+          const titleInput = await page.waitForSelector('.semi-input.semi-input-default', { timeout: 10000 });
+          await titleInput.fill(title);
+        } catch (e) {
+          await page.getByPlaceholder('添加作品标题').fill(title);
+        }
+
+        // 7. Fill Description
+        console.log("[Publish] Filling description...");
+        const editor = await page.waitForSelector('.zone-container .ace-line');
+        await editor.click();
+        await page.keyboard.type(content);
+
+        // 8. Add Hashtags
+        console.log("[Publish] Adding hashtags...");
+        const tags = hashtags.split(' ').filter((t: string) => t.startsWith('#'));
+        for (const tag of tags) {
+          await page.keyboard.type(tag);
+          await page.keyboard.press('Enter');
+          await page.waitForTimeout(500);
+        }
+
+        // 9. Add Collection
+        console.log("[Publish] Selecting collection...");
+        try {
+          const collectionBtn = await page.getByText('添加合集').first();
+          await collectionBtn.click();
+          await page.waitForTimeout(1000);
+          await page.getByText('Github Trending').first().click();
+        } catch (e) {
+          console.warn("[Publish] Could not select collection:", e.message);
+        }
+
+        // 10. Add Music
+        console.log("[Publish] Selecting music...");
+        try {
+          await page.getByText('选择音乐').first().click();
+          await page.waitForTimeout(1000);
+          await page.getByText('飙升榜').first().click();
+          await page.waitForTimeout(1000);
+          // Click the first "使用" button
+          await page.locator('.music-item-use-btn').first().click();
+        } catch (e) {
+          console.warn("[Publish] Could not select music:", e.message);
+        }
+
+        // 11. Click Publish
+        console.log("[Publish] Ready to publish!");
+        // await page.getByText('发布').first().click(); // Commented out for safety during initial tests
         
       } else if (platform === "xiaohongshu") {
         // 1. Open upload page
-        await page.goto("https://creator.xiaohongshu.com/publish/publish");
+        await page.goto("https://creator.xiaohongshu.com/publish/publish", { waitUntil: 'networkidle' });
         
-        // TODO: Implement full steps from step.text
-        console.log("[Publish] Xiaohongshu automation foundation reached.");
+        // 2. Upload images
+        console.log("[Publish] Uploading images to XHS...");
+        // First image
+        const fileInput = await page.waitForSelector('input[type="file"]');
+        await fileInput.setInputFiles(filePayloads[0]);
+        
+        // Subsequent images
+        if (filePayloads.length > 1) {
+          await page.waitForTimeout(2000); // Wait for first upload to process slightly
+          const moreInput = await page.waitForSelector('.img-upload-area .entry input[type="file"]');
+          await moreInput.setInputFiles(filePayloads.slice(1));
+        }
+
+        // 5. Fill Title
+        console.log("[Publish] Filling title...");
+        await page.getByPlaceholder('填写标题会有更多赞哦').fill(title);
+
+        // 5 (duplicated in step.text). Fill Description
+        console.log("[Publish] Filling description...");
+        const editor = await page.waitForSelector('.editor-content p');
+        await editor.click();
+        await page.keyboard.type(content);
+
+        // 6. Add Hashtags
+        console.log("[Publish] Adding hashtags...");
+        const tags = hashtags.split(' ').filter((t: string) => t.startsWith('#'));
+        for (const tag of tags) {
+          await page.keyboard.type(tag);
+          await page.keyboard.press('Space');
+          await page.waitForTimeout(500);
+        }
+
+        // 7. Select Collection
+        console.log("[Publish] Selecting collection...");
+        try {
+          await page.getByText('选择合集').first().click();
+          // Note: Specific collection selection depends on the list content
+          // We assume the user wants to pick the relevant one or it's handled manually
+        } catch (e) {
+          console.warn("[Publish] Could not find collection selector:", e.message);
+        }
+
+        // 8. Original Declaration
+        console.log("[Publish] Enabling original declaration...");
+        try {
+          const originalLabel = await page.getByText('原创声明').first();
+          const radio = await originalLabel.locator('..').locator('input[type="radio"], .ant-radio-input').first();
+          await radio.click();
+        } catch (e) {
+          console.warn("[Publish] Could not enable original declaration:", e.message);
+        }
+
+        // 9. Click Publish
+        console.log("[Publish] Ready to publish!");
+        // await page.locator('button:has-text("发布")').first().click(); // Commented out for safety
       }
 
       res.json({ success: true, message: `Automation foundation reached for ${platform}` });

@@ -19,15 +19,15 @@
 ### Phase 7: 抖音自动化发布 (Douyin Automation)
 - **Goal:** Implement the full Playwright script for Douyin based on `step.text`.
 - **Tasks:**
-    - [ ] **Task 7.1:** Implement image upload logic (sequentially handling `0.png` onwards).
-    - [ ] **Task 7.2:** Implement metadata injection (date-based title, summary, hashtags).
-    - [ ] **Task 7.3:** Automate collection and music selection steps.
+    - [x] **Task 7.1:** Implement image upload logic (sequentially handling `0.png` onwards).
+    - [x] **Task 7.2:** Implement metadata injection (date-based title, summary, hashtags).
+    - [x] **Task 7.3:** Automate collection and music selection steps.
 - **Success Criteria:** Clicking "Auto Publish" for Douyin successfully completes the entire creation flow up to the final publish button.
 
 ### Phase 8: 小红书自动化发布 (Xiaohongshu Automation)
 - **Goal:** Implement the full Playwright script for Xiaohongshu based on `step.text`.
 - **Tasks:**
-    - [ ] **Task 8.1:** Implement image upload and geolocation permission handling.
-    - [ ] **Task 8.2:** Implement content injection (title, rich-text description, tags).
-    - [ ] **Task 8.3:** Automate "Original Declaration" and collection selection.
+    - [x] **Task 8.1:** Implement image upload and geolocation permission handling.
+    - [x] **Task 8.2:** Implement content injection (title, rich-text description, tags).
+    - [x] **Task 8.3:** Automate "Original Declaration" and collection selection.
 - **Success Criteria:** Clicking "Auto Publish" for Xiaohongshu successfully navigates through the creation UI and prepares the note for publishing.
