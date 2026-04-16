@@ -235,7 +235,12 @@ export const platformService = {
         console.log("[Publish] Selecting collection...");
         try {
           await page.getByText('选择合集').first().click();
-        } catch (e) {}
+          await page.waitForTimeout(1000);
+          const collectionItem = await page.locator('.collection-plugin-popover-content .item').filter({ hasText: 'Github Trending' }).first();
+          await collectionItem.click();
+        } catch (e) {
+          console.warn("[Publish] XHS collection selection failed:", e.message);
+        }
 
         console.log("[Publish] Enabling original declaration...");
         try {

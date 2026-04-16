@@ -282,8 +282,8 @@ export function useAppLogic() {
       setLayoutMode(originalMode);
 
       // Append project URLs to the content
-      const projectUrls = trendingData.map(item => `https://github.com/${item.title}`).join("\n");
-      const fullContent = globalSummary + "\n\n项目地址：\n" + projectUrls;
+      const projectUrls = trendingData.map(item => `https://github.com/${item.title}`).join("\r\n");
+      const fullContent = globalSummary + "\r\n\r\n项目地址：\r\n" + projectUrls;
 
       setStatusMsg(`正在启动 ${platform} 自动化发布程序...`);
       const res = await fetch(`/api/platform/${platform}/publish`, {
