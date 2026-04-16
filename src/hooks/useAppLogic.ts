@@ -136,33 +136,65 @@ export function useAppLogic() {
       }
 
       const processedData = [...data];
+      // Part A: Fetch Metadata (Fast)
+      setStatusMsg("正在同步项目元数据 (头像、标签、README)...");
+      for (let i = 0; i < processedData.length; i++) {
+        const item = processedData[i];
+        try {
+          const [owner, repo] = item.title.split("/");
+          const detailsRes = await fetch(`/api/project-details?owner=${owner}&repo=${repo}&date=${selectedDate}`);
+          if (detailsRes.ok) {
+            const details = await detailsRes.json();
+            processedData[i] = {
+              ...item,
+              avatarUrl: details.avatarUrl,
+              keywords: details.keywords || item.keywords,
+              // Temporarily store readme for next step
+              content: details.readme || item.content 
+            };
+            setTrendingData([...processedData]);
+            if (currentIndexRef.current === i) {
+              setAvatarUrl(details.avatarUrl || "");
+              setHighlightWords(details.keywords || item.keywords);
+            }
+          }
+        } catch (err) {
+          console.error(`[Metadata] Error for ${item.title}:`, err);
+        }
+      }
+
+      // Part B: Generate AI Summaries (Slow - Ollama)
       for (let i = 0; i < processedData.length; i++) {
         const item = processedData[i];
         setProcessProgress(Math.round(((i) / processedData.length) * 100));
         setStatusMsg(`正在生成 AI 摘要 (${i + 1}/${processedData.length}): ${item.title}`);
+        
         try {
-          const [owner, repo] = item.title.split("/");
-          const aiRes = await fetch(`/api/process-readme?owner=${owner}&repo=${repo}&date=${selectedDate}`);
+          const aiRes = await fetch("/api/summarize-project", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              title: item.title,
+              readme: item.content, // This is the readme fetched in Part A
+              date: selectedDate
+            })
+          });
+
           if (aiRes.ok) {
             const aiData = await aiRes.json();
             processedData[i] = {
               ...item,
               aiSummary: aiData.summary,
               aiKeywords: aiData.keywords,
-              avatarUrl: aiData.avatarUrl,
-              keywords: aiData.projectKeywords || item.keywords
             };
-          } else {
-            processedData[i] = { ...item, aiSummary: item.content, aiKeywords: item.keywords };
+            setTrendingData([...processedData]);
+            if (currentIndexRef.current === i) {
+              setContent(aiData.summary);
+              setHighlightWords(aiData.keywords);
+            }
           }
         } catch (err) {
-          processedData[i] = { ...item, aiSummary: item.content, aiKeywords: item.keywords };
-        }
-        setTrendingData([...processedData]);
-        if (currentIndexRef.current === i) {
-          setContent(processedData[i].aiSummary || processedData[i].content);
-          setHighlightWords(processedData[i].aiKeywords || processedData[i].keywords);
-          setAvatarUrl(processedData[i].avatarUrl || "");
+          console.error(`[AI] Error for ${item.title}:`, err);
         }
       }
       setProcessProgress(100);
