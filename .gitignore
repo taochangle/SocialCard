@@ -10,6 +10,7 @@ coverage/
 # AI coding artifacts
 .planning/
 step.text
+CLAUDE.md
 
 # Local DB
 *.db

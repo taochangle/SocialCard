@@ -47,7 +47,6 @@ export default function App() {
         theme={logic.theme}
         displayDate={logic.displayDate}
         timeText={logic.timeText}
-        weekdayText={logic.weekdayText}
         authorName={logic.authorName}
         globalSummary={logic.globalSummary}
         globalHashtags={logic.globalHashtags}

@@ -23,7 +23,6 @@ export function useAppLogic() {
   const [content, setContent] = useState("分享，让生活有了标点符号。\nCodex 真的太快了");
   const [highlightWords, setHighlightWords] = useState("Codex,Kimi");
   const [timeText, setTimeText] = useState("");
-  const [weekdayText, setWeekdayText] = useState("");
 
   const [projectName, setProjectName] = useState("google/generative-ai-js");
   const [projectUrl, setProjectUrl] = useState("github.com/google/generative-ai-js");
@@ -50,7 +49,6 @@ export function useAppLogic() {
   useEffect(() => {
     const now = new Date();
     setTimeText(now.toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" }));
-    setWeekdayText(now.toLocaleDateString("en-US", { weekday: "long" }).toUpperCase());
     loadCache(selectedDate);
     checkPlatformStatus();
   }, []);
@@ -364,7 +362,6 @@ export function useAppLogic() {
     highlightWords,
     setHighlightWords,
     timeText,
-    weekdayText,
     projectName,
     projectUrl,
     stars,

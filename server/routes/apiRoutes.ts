@@ -1,5 +1,5 @@
 import express from "express";
-import db, { dbService } from "../services/dbService.js";
+import { dbService } from "../services/dbService.js";
 import { aiService } from "../services/aiService.js";
 import { githubService } from "../services/githubService.js";
 import { platformService } from "../services/platformService.js";

@@ -1,6 +1,5 @@
 import React from "react";
-import { Image as ImageIcon, ChevronLeft, ChevronRight } from "lucide-react";
-import { motion } from "framer-motion";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Theme, RankingItem } from "../types";
 import { IndexCard } from "./IndexCard";
 import { DetailCard } from "./DetailCard";
@@ -10,7 +9,6 @@ interface PreviewPanelProps {
   theme: Theme;
   displayDate: string;
   timeText: string;
-  weekdayText: string;
   authorName: string;
   globalSummary: string;
   globalHashtags: string;
@@ -36,7 +34,6 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({
   theme,
   displayDate,
   timeText,
-  weekdayText,
   authorName,
   globalSummary,
   globalHashtags,
@@ -113,7 +110,6 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({
                 theme={theme}
                 displayDate={displayDate}
                 timeText={timeText}
-                weekdayText={weekdayText}
                 authorName={authorName}
                 trendingData={trendingData}
               />

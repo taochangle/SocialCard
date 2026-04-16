@@ -6,7 +6,6 @@ interface IndexCardProps {
   theme: Theme;
   displayDate: string;
   timeText: string;
-  weekdayText: string;
   authorName: string;
   trendingData: RankingItem[];
 }
@@ -15,7 +14,6 @@ export const IndexCard: React.FC<IndexCardProps> = ({
   theme,
   displayDate,
   timeText,
-  weekdayText,
   authorName,
   trendingData,
 }) => {
