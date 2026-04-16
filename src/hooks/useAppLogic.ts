@@ -29,6 +29,7 @@ export function useAppLogic() {
   const [projectUrl, setProjectUrl] = useState("github.com/google/generative-ai-js");
   const [stars, setStars] = useState("12.4k");
   const [starsToday, setStarsToday] = useState("450");
+  const [avatarUrl, setAvatarUrl] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -83,6 +84,7 @@ export function useAppLogic() {
     setProjectUrl(item.url || "");
     setStars(item.stars || "");
     setStarsToday(item.starsToday || "");
+    setAvatarUrl(item.avatarUrl || "");
     setContent(item.aiSummary || item.content);
     setHighlightWords(item.aiKeywords || item.keywords);
   };
@@ -128,6 +130,7 @@ export function useAppLogic() {
         setProjectUrl(firstItem.url || "");
         setStars(firstItem.stars || "");
         setStarsToday(firstItem.starsToday || "");
+        setAvatarUrl(firstItem.avatarUrl || "");
         setContent(firstItem.content);
         setHighlightWords(firstItem.keywords);
       }
@@ -333,6 +336,7 @@ export function useAppLogic() {
     displayDate,
     keywordList,
     highlightedHtml,
+    avatarUrl,
     applyProject,
     fetchTrending,
     loadCache,

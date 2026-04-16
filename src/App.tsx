@@ -58,6 +58,7 @@ export default function App() {
         currentIndex={logic.currentIndex}
         highlightedHtml={logic.highlightedHtml}
         keywordList={logic.keywordList}
+        avatarUrl={logic.avatarUrl}
         statusMsg={logic.statusMsg}
         isProcessing={logic.isProcessing}
         processProgress={logic.processProgress}

@@ -61,8 +61,10 @@ export const githubService = {
             timeout: 10000
           });
           const topics = response.data.topics || [];
+          const avatarUrl = response.data.owner?.avatar_url || "";
           item.keywords = topics.join(",");
-          console.log(`[Tags] ${item.title}: ${item.keywords}`);
+          item.avatarUrl = avatarUrl;
+          console.log(`[Tags] ${item.title}: ${item.keywords}, Avatar: ${!!avatarUrl}`);
         } catch (err: any) {
           console.error(`[Tags] Failed to fetch tags for ${item.title}:`, err.message);
         }

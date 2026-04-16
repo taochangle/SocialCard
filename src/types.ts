@@ -23,4 +23,5 @@ export interface RankingItem {
   url?: string;
   aiSummary?: string;
   aiKeywords?: string;
+  avatarUrl?: string;
 }

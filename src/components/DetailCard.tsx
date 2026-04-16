@@ -11,6 +11,7 @@ interface DetailCardProps {
   currentIndex: number;
   highlightedHtml: string;
   keywordList: string[];
+  avatarUrl?: string;
 }
 
 export const DetailCard: React.FC<DetailCardProps> = ({
@@ -22,6 +23,7 @@ export const DetailCard: React.FC<DetailCardProps> = ({
   currentIndex,
   highlightedHtml,
   keywordList,
+  avatarUrl,
 }) => {
   return (
     <div
@@ -34,7 +36,7 @@ export const DetailCard: React.FC<DetailCardProps> = ({
       {/* Detail Mode Header */}
       <div className="flex items-center gap-4 mb-8">
         <img
-          src={`https://ui-avatars.com/api/?name=${projectName.split("/")[0]}&background=random&size=100`}
+          src={avatarUrl || `https://ui-avatars.com/api/?name=${projectName.split("/")[0]}&background=random&size=100`}
           alt="avatar"
           crossOrigin="anonymous"
           className="avatar d-none d-md-block w-14 h-14 rounded-full object-cover shadow-sm flex-shrink-0"

@@ -20,6 +20,7 @@ db.exec(`
     stars TEXT,
     starsToday TEXT,
     url TEXT,
+    avatarUrl TEXT,
     date TEXT
   );
 
@@ -60,14 +61,14 @@ export const dbService = {
   saveTrendingProjects(date: string, projects: any[]) {
     const deleteStmt = db.prepare("DELETE FROM trending_projects WHERE date = ?");
     const insertStmt = db.prepare(`
-      INSERT INTO trending_projects (title, content, keywords, username, stars, starsToday, url, date)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO trending_projects (title, content, keywords, username, stars, starsToday, url, avatarUrl, date)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     const transaction = db.transaction((data) => {
       deleteStmt.run(date);
       for (const item of data) {
-        insertStmt.run(item.title, item.content, item.keywords, item.username, item.stars, item.starsToday, item.url, date);
+        insertStmt.run(item.title, item.content, item.keywords, item.username, item.stars, item.starsToday, item.url, item.avatarUrl || "", date);
       }
     });
     transaction(projects);

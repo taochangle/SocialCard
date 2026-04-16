@@ -22,6 +22,7 @@ interface PreviewPanelProps {
   currentIndex: number;
   highlightedHtml: string;
   keywordList: string[];
+  avatarUrl?: string;
   statusMsg: string | null;
   isProcessing: boolean;
   processProgress: number;
@@ -47,6 +48,7 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({
   currentIndex,
   highlightedHtml,
   keywordList,
+  avatarUrl,
   statusMsg,
   isProcessing,
   processProgress,
@@ -104,6 +106,7 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({
                 currentIndex={currentIndex}
                 highlightedHtml={highlightedHtml}
                 keywordList={keywordList}
+                avatarUrl={avatarUrl}
               />
             ) : (
               <IndexCard
