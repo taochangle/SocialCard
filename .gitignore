@@ -13,5 +13,6 @@ step.text
 CLAUDE.md
 
 # Local DB
+data.db
 *.db
 *.db-journal
