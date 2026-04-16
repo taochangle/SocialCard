@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { toPng } from "html-to-image";
 import download from "downloadjs";
 import JSZip from "jszip";
@@ -75,7 +75,7 @@ export function useAppLogic() {
     return html.replace(/\n/g, "<br>");
   }, [content, keywordList, theme.accentColor]);
 
-  const applyProject = (index: number, data?: RankingItem[]) => {
+  const applyProject = useCallback((index: number, data?: RankingItem[]) => {
     const targetData = data || trendingData;
     const item = targetData[index];
     if (!item) return;
@@ -88,7 +88,7 @@ export function useAppLogic() {
     setAvatarUrl(item.avatarUrl || "");
     setContent(item.aiSummary || item.content);
     setHighlightWords(item.aiKeywords || item.keywords);
-  };
+  }, [trendingData]);
 
   const loadCache = async (date?: string) => {
     const targetDate = date || selectedDate;
@@ -127,14 +127,7 @@ export function useAppLogic() {
       const data: RankingItem[] = await response.json();
       setTrendingData(data);
       if (data.length > 0) {
-        const firstItem = data[0];
-        setProjectName(firstItem.title);
-        setProjectUrl(firstItem.url || "");
-        setStars(firstItem.stars || "");
-        setStarsToday(firstItem.starsToday || "");
-        setAvatarUrl(firstItem.avatarUrl || "");
-        setContent(firstItem.content);
-        setHighlightWords(firstItem.keywords);
+        applyProject(0, data);
       }
 
       const processedData = [...data];
@@ -291,7 +284,12 @@ export function useAppLogic() {
       const res = await fetch(`/api/platform/${platform}/publish`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ images, title: displayDate, content: globalSummary, hashtags: globalHashtags }),
+        body: JSON.stringify({ 
+          images, 
+          publishDate: selectedDate, // Use standard YYYY-MM-DD
+          content: globalSummary, 
+          hashtags: globalHashtags 
+        }),
       });
       const data = await res.json();
       if (data.success) setStatusMsg(`${platform} 自动化任务已启动！`);
@@ -366,6 +364,7 @@ export function useAppLogic() {
     projectUrl,
     stars,
     starsToday,
+    avatarUrl,
     loading,
     isProcessing,
     processProgress,
@@ -383,7 +382,6 @@ export function useAppLogic() {
     displayDate,
     keywordList,
     highlightedHtml,
-    avatarUrl,
     applyProject,
     fetchTrending,
     loadCache,

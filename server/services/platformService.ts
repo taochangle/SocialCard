@@ -38,7 +38,7 @@ export const platformService = {
   },
 
   async publish(platform: string, payload: any) {
-    const { images, title, content, hashtags } = payload;
+    const { images, publishDate, content, hashtags } = payload;
     const session = dbService.getPlatformSession(platform);
     if (!session) {
       throw new Error(`Not logged into ${platform}`);
@@ -94,16 +94,11 @@ export const platformService = {
         
         // 6. 填充标题 (格式: YYYY-MM-DD)
         console.log("[Publish] Filling title...");
-        const dateMatch = title.match(/(\d{4})[^\d](\d{1,2})[^\d](\d{1,2})/);
-        const formattedTitle = dateMatch 
-          ? `${dateMatch[1]}-${dateMatch[2].padStart(2, '0')}-${dateMatch[3].padStart(2, '0')}`
-          : title;
-
         try {
           const titleInput = await page.waitForSelector('.semi-input.semi-input-default', { timeout: 10000 });
-          await titleInput.fill(formattedTitle);
+          await titleInput.fill(publishDate);
         } catch (e) {
-          await page.getByPlaceholder('添加作品标题').fill(formattedTitle);
+          await page.getByPlaceholder('添加作品标题').fill(publishDate);
         }
 
         // 7. 填充描述
@@ -204,7 +199,7 @@ export const platformService = {
           }
 
         console.log("[Publish] Filling title...");
-        await page.getByPlaceholder('填写标题会有更多赞哦').fill(title);
+        await page.getByPlaceholder('填写标题会有更多赞哦').fill(publishDate);
 
         console.log("[Publish] Filling description...");
         const editor = await page.waitForSelector('.editor-content p');
