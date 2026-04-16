@@ -229,7 +229,15 @@ export const platformService = {
         for (const tag of tags) {
           await page.keyboard.type(tag);
           await page.keyboard.press('Enter');
-          await page.waitForTimeout(500);
+          
+          // 等待并点击弹出的话题确认框
+          try {
+            const topicContainer = await page.waitForSelector('.creator-editor-topic-container', { timeout: 3000 });
+            await topicContainer.click();
+            await page.waitForTimeout(500);
+          } catch (e) {
+            console.warn(`[Publish] Topic container for ${tag} not found or click failed:`, e.message);
+          }
         }
 
         console.log("[Publish] Selecting collection...");
