@@ -11,7 +11,7 @@ export const githubService = {
       });
       const page = await context.newPage();
       
-      await page.goto("https://github.com/trending?spoken_language_code=", {
+      await page.goto("https://github.com/trending?since=daily&spoken_language_code=", {
         waitUntil: "networkidle",
         timeout: 60000
       });
@@ -40,45 +40,47 @@ export const githubService = {
             username,
             stars: totalStars,
             starsToday,
-            url
+            url,
+            avatarUrl: ""
           };
         });
       });
 
-      console.log(`Successfully scraped ${items.length} items from GitHub Trending`);
-      
-      // Fetch tags from GitHub API
-      const concurrency = 5;
-      const fetchTags = async (item: any) => {
-        try {
-          const GITHUB_PAT = process.env.GITHUB_PAT;
-          const [owner, repo] = item.title.split("/");
-          const response = await axios.get(`https://api.github.com/repos/${owner}/${repo}`, {
-            headers: {
-              ...(GITHUB_PAT ? { Authorization: `token ${GITHUB_PAT}` } : {}),
-              Accept: "application/vnd.github.v3+json"
-            },
-            timeout: 10000
-          });
-          const topics = response.data.topics || [];
-          const avatarUrl = response.data.owner?.avatar_url || "";
-          item.keywords = topics.join(",");
-          item.avatarUrl = avatarUrl;
-          console.log(`[Tags] ${item.title}: ${item.keywords}, Avatar: ${!!avatarUrl}`);
-        } catch (err: any) {
-          console.error(`[Tags] Failed to fetch tags for ${item.title}:`, err.message);
-        }
-      };
-
-      for (let i = 0; i < items.length; i += concurrency) {
-        const batch = items.slice(i, i + concurrency);
-        await Promise.all(batch.map(fetchTags));
-      }
-
+      console.log(`Successfully scraped ${items.length} items from GitHub Trending (basic info)`);
       return items;
     } finally {
       if (browser) await browser.close();
     }
+  },
+
+  async fetchProjectDetails(owner: string, repo: string) {
+    const GITHUB_PAT = process.env.GITHUB_PAT;
+    const config = {
+      headers: {
+        ...(GITHUB_PAT ? { Authorization: `token ${GITHUB_PAT}` } : {}),
+        Accept: "application/vnd.github.v3+json"
+      },
+      timeout: 15000
+    };
+
+    console.log(`[Details] Fetching details for ${owner}/${repo}...`);
+    
+    // 1. Fetch main repo info (for topics and avatar)
+    const repoRes = await axios.get(`https://api.github.com/repos/${owner}/${repo}`, config);
+    const topics = repoRes.data.topics || [];
+    const avatarUrl = repoRes.data.owner?.avatar_url || "";
+
+    // 2. Fetch README content (raw)
+    const readmeRes = await axios.get(`https://api.github.com/repos/${owner}/${repo}/readme`, {
+      ...config,
+      headers: { ...config.headers, Accept: "application/vnd.github.v3.raw" }
+    });
+
+    return {
+      keywords: topics.join(","),
+      avatarUrl: avatarUrl,
+      readme: readmeRes.data
+    };
   },
 
   async fetchReadmeContent(owner: string, repo: string, retries = 3): Promise<string> {

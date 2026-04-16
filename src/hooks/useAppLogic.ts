@@ -145,7 +145,13 @@ export function useAppLogic() {
           const aiRes = await fetch(`/api/process-readme?owner=${owner}&repo=${repo}&date=${selectedDate}`);
           if (aiRes.ok) {
             const aiData = await aiRes.json();
-            processedData[i] = { ...item, aiSummary: aiData.summary, aiKeywords: aiData.keywords };
+            processedData[i] = {
+              ...item,
+              aiSummary: aiData.summary,
+              aiKeywords: aiData.keywords,
+              avatarUrl: aiData.avatarUrl,
+              keywords: aiData.projectKeywords || item.keywords
+            };
           } else {
             processedData[i] = { ...item, aiSummary: item.content, aiKeywords: item.keywords };
           }
@@ -156,6 +162,7 @@ export function useAppLogic() {
         if (currentIndexRef.current === i) {
           setContent(processedData[i].aiSummary || processedData[i].content);
           setHighlightWords(processedData[i].aiKeywords || processedData[i].keywords);
+          setAvatarUrl(processedData[i].avatarUrl || "");
         }
       }
       setProcessProgress(100);
