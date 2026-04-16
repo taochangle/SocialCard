@@ -9,6 +9,22 @@
 
 ---
 
+## 📺 效果展示
+
+| 1. 实时趋势抓取 | 2. AI 深度总结 |
+| :---: | :---: |
+| ![Scraping](docs/1.png) | ![AI Summary](docs/2.png) |
+
+| 3. 多样视觉主题 | 4. 自动化分发中心 |
+| :---: | :---: |
+| ![Templates](docs/3.png) | ![Distribution](docs/4.png) |
+
+| 5. 极致视觉预览 |
+| :---: |
+| ![Preview](docs/5.png) |
+
+---
+
 ## ✨ 核心特性
 
 ### 1. 实时趋势洞察 📡
