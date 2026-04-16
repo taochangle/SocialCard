@@ -68,9 +68,19 @@ export const platformService = {
       if (platform === "douyin") {
         await page.goto("https://creator.douyin.com/creator-micro/content/upload?default-tab=3", { waitUntil: 'networkidle' });
         
-        console.log("[Publish] Uploading images...");
+        console.log("[Publish] Uploading images sequentially...");
         const fileInput = await page.waitForSelector('input[type="file"]');
-        await fileInput.setInputFiles(filePayloads);
+        
+        // Upload Cover (0.png)
+        await fileInput.setInputFiles(filePayloads[0]);
+        await page.waitForTimeout(2000);
+
+        // Upload remaining images
+        for (let i = 1; i < filePayloads.length; i++) {
+          console.log(`[Publish] Uploading image ${i}...`);
+          await fileInput.setInputFiles(filePayloads[i]);
+          await page.waitForTimeout(1000);
+        }
         // 6. 填充标题 (格式: YYYY-MM-DD)
         console.log("[Publish] Filling title...");
         const dateMatch = title.match(/(\d{4})[^\d](\d{1,2})[^\d](\d{1,2})/);
@@ -138,19 +148,25 @@ export const platformService = {
 
 
         console.log("[Publish] Ready to publish!");
-        
-      } else if (platform === "xiaohongshu") {
-        await page.goto("https://creator.xiaohongshu.com/publish/publish", { waitUntil: 'networkidle' });
-        
-        console.log("[Publish] Uploading images to XHS...");
-        const fileInput = await page.waitForSelector('input[type="file"]');
-        await fileInput.setInputFiles(filePayloads[0]);
-        
-        if (filePayloads.length > 1) {
-          await page.waitForTimeout(2000);
-          const moreInput = await page.waitForSelector('.img-upload-area .entry input[type="file"]');
-          await moreInput.setInputFiles(filePayloads.slice(1));
-        }
+        await page.locator('button').filter({ hasText: '发布' }).first().click();
+        } else if (platform === "xiaohongshu") {
+          await page.goto("https://creator.xiaohongshu.com/publish/publish", { waitUntil: 'networkidle' });
+
+          console.log("[Publish] Uploading images to XHS sequentially...");
+          // Upload Cover (0.png)
+          const fileInput = await page.waitForSelector('input[type="file"]');
+          await fileInput.setInputFiles(filePayloads[0]);
+          await page.waitForTimeout(3000);
+
+          // Upload remaining images
+          if (filePayloads.length > 1) {
+            for (let i = 1; i < filePayloads.length; i++) {
+              console.log(`[Publish] Uploading image ${i} to XHS...`);
+              const moreInput = await page.waitForSelector('.img-upload-area .entry input[type="file"]');
+              await moreInput.setInputFiles(filePayloads[i]);
+              await page.waitForTimeout(1000);
+            }
+          }
 
         console.log("[Publish] Filling title...");
         await page.getByPlaceholder('填写标题会有更多赞哦').fill(title);
