@@ -1,5 +1,5 @@
 import express from "express";
-import { dbService } from "../services/dbService.js";
+import db, { dbService } from "../services/dbService.js";
 import { aiService } from "../services/aiService.js";
 import { githubService } from "../services/githubService.js";
 import { platformService } from "../services/platformService.js";
@@ -58,12 +58,8 @@ router.get("/project-details", async (req, res) => {
   try {
     const details = await githubService.fetchProjectDetails(owner as string, repo as string);
     
-    // Update trending_projects table with metadata
-    db.prepare(`
-      UPDATE trending_projects 
-      SET avatarUrl = ?, keywords = ?
-      WHERE title = ? AND date = ?
-    `).run(details.avatarUrl, details.keywords, `${owner}/${repo}`, targetDate);
+    // Update project_meta table
+    dbService.saveProjectMeta(`${owner}/${repo}`, details.avatarUrl, details.keywords, targetDate);
 
     res.json(details);
   } catch (error: any) {

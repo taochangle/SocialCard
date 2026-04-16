@@ -11,16 +11,21 @@ const db = new Database(dbPath);
 
 // Initialize schema
 db.exec(`
-  CREATE TABLE IF NOT EXISTS trending_projects (
+  CREATE TABLE IF NOT EXISTS repositories (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT,
     content TEXT,
-    keywords TEXT,
     username TEXT,
     stars TEXT,
     starsToday TEXT,
     url TEXT,
+    date TEXT
+  );
+
+  CREATE TABLE IF NOT EXISTS project_meta (
+    title TEXT PRIMARY KEY,
     avatarUrl TEXT,
+    topics TEXT,
     date TEXT
   );
 
@@ -31,7 +36,7 @@ db.exec(`
     date TEXT
   );
 
-  CREATE TABLE IF NOT EXISTS global_state (
+  CREATE TABLE IF NOT EXISTS daily_summaries (
     date TEXT PRIMARY KEY,
     summary TEXT,
     hashtags TEXT
@@ -46,32 +51,47 @@ db.exec(`
 export const dbService = {
   getProjectsByDate(date: string) {
     return db.prepare(`
-      SELECT tp.*, ps.aiSummary, ps.aiKeywords 
-      FROM trending_projects tp
-      LEFT JOIN project_summaries ps ON tp.title = ps.title
-      WHERE tp.date = ?
-      ORDER BY tp.id ASC
+      SELECT 
+        r.*, 
+        m.avatarUrl, m.topics as keywords,
+        s.aiSummary, s.aiKeywords 
+      FROM repositories r
+      LEFT JOIN project_meta m ON r.title = m.title
+      LEFT JOIN project_summaries s ON r.title = s.title
+      WHERE r.date = ?
+      ORDER BY r.id ASC
     `).all(date);
   },
 
   getGlobalStateByDate(date: string) {
-    return db.prepare("SELECT * FROM global_state WHERE date = ?").get(date) as any;
+    return db.prepare("SELECT * FROM daily_summaries WHERE date = ?").get(date) as any;
   },
 
   saveTrendingProjects(date: string, projects: any[]) {
-    const deleteStmt = db.prepare("DELETE FROM trending_projects WHERE date = ?");
+    const deleteStmt = db.prepare("DELETE FROM repositories WHERE date = ?");
     const insertStmt = db.prepare(`
-      INSERT INTO trending_projects (title, content, keywords, username, stars, starsToday, url, avatarUrl, date)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO repositories (title, content, username, stars, starsToday, url, date)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `);
 
     const transaction = db.transaction((data) => {
       deleteStmt.run(date);
       for (const item of data) {
-        insertStmt.run(item.title, item.content, item.keywords, item.username, item.stars, item.starsToday, item.url, item.avatarUrl || "", date);
+        insertStmt.run(item.title, item.content, item.username, item.stars, item.starsToday, item.url, date);
       }
     });
     transaction(projects);
+  },
+
+  saveProjectMeta(title: string, avatarUrl: string, topics: string, date: string) {
+    db.prepare(`
+      INSERT INTO project_meta (title, avatarUrl, topics, date)
+      VALUES (?, ?, ?, ?)
+      ON CONFLICT(title) DO UPDATE SET
+        avatarUrl = excluded.avatarUrl,
+        topics = excluded.topics,
+        date = excluded.date
+    `).run(title, avatarUrl, topics, date);
   },
 
   saveProjectSummary(title: string, summary: string, keywords: string, date: string) {
@@ -87,7 +107,7 @@ export const dbService = {
 
   saveGlobalState(date: string, summary: string, hashtags: string) {
     db.prepare(`
-      INSERT INTO global_state (date, summary, hashtags)
+      INSERT INTO daily_summaries (date, summary, hashtags)
       VALUES (?, ?, ?)
       ON CONFLICT(date) DO UPDATE SET
         summary = excluded.summary,

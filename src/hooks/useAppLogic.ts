@@ -37,6 +37,7 @@ export function useAppLogic() {
   const [globalSummary, setGlobalSummary] = useState("");
   const [globalHashtags, setGlobalHashtags] = useState("");
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
+  const [processStage, setProcessStage] = useState<"idle" | "scraping" | "metadata" | "summarizing" | "global">("idle");
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
   const [platformStatus, setPlatformStatus] = useState<{ [key: string]: boolean }>({
     douyin: false,
@@ -118,6 +119,7 @@ export function useAppLogic() {
     setLoading(true);
     setIsProcessing(true);
     setProcessProgress(0);
+    setProcessStage("scraping");
     setStatusMsg(`正在获取 ${selectedDate} 的 GitHub Trending 列表...`);
     try {
       const response = await fetch(`/api/trending?date=${selectedDate}`);
@@ -137,6 +139,7 @@ export function useAppLogic() {
 
       const processedData = [...data];
       // Part A: Fetch Metadata (Fast)
+      setProcessStage("metadata");
       setStatusMsg("正在同步项目元数据 (头像、标签、README)...");
       for (let i = 0; i < processedData.length; i++) {
         const item = processedData[i];
@@ -164,6 +167,7 @@ export function useAppLogic() {
       }
 
       // Part B: Generate AI Summaries (Slow - Ollama)
+      setProcessStage("summarizing");
       for (let i = 0; i < processedData.length; i++) {
         const item = processedData[i];
         setProcessProgress(Math.round(((i) / processedData.length) * 100));
@@ -201,6 +205,7 @@ export function useAppLogic() {
       setTrendingData(processedData);
 
       try {
+        setProcessStage("global");
         setStatusMsg("正在生成今日趋势大总结...");
         const gsRes = await fetch("/api/global-summary", {
           method: "POST",
@@ -215,9 +220,11 @@ export function useAppLogic() {
       } catch (err: any) {
         console.error("[AI] Error generating global summary:", err?.message || err);
       }
+      setProcessStage("idle");
       setStatusMsg("已同步并处理完成所有 GitHub Trending 数据！");
       setTimeout(() => setStatusMsg(null), 3000);
     } catch (error: any) {
+      setProcessStage("idle");
       setStatusMsg(`获取失败: ${error.message}`);
     } finally {
       setLoading(false);
@@ -368,6 +375,7 @@ export function useAppLogic() {
     setGlobalHashtags,
     statusMsg,
     setStatusMsg,
+    processStage,
     selectedDate,
     setSelectedDate,
     platformStatus,

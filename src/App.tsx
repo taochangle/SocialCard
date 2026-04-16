@@ -39,6 +39,7 @@ export default function App() {
         exportImage={logic.exportImage}
         applyProject={logic.applyProject}
         setStatusMsg={logic.setStatusMsg}
+        processStage={logic.processStage}
       />
 
       <PreviewPanel

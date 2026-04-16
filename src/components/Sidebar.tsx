@@ -40,6 +40,7 @@ interface SidebarProps {
   exportImage: () => void;
   applyProject: (index: number) => void;
   setStatusMsg: (msg: string | null) => void;
+  processStage: "idle" | "scraping" | "metadata" | "summarizing" | "global";
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -68,6 +69,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   exportImage,
   applyProject,
   setStatusMsg,
+  processStage,
 }) => {
   const dateInputRef = useRef<HTMLInputElement>(null);
 
@@ -125,6 +127,35 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Status Panel (Migrated from Preview) */}
         <div className="mb-8 flex flex-col gap-3 px-4 py-3 rounded-xl bg-white/5 border border-white/5 backdrop-blur-sm">
+          {/* Stage Indicator */}
+          {processStage !== "idle" && (
+            <div className="flex items-center justify-between mb-1">
+              {[
+                { key: "scraping", label: "列表" },
+                { key: "metadata", label: "元数据" },
+                { key: "summarizing", label: "AI摘要" },
+                { key: "global", label: "汇总" }
+              ].map((stage, i) => {
+                const stages = ["scraping", "metadata", "summarizing", "global"];
+                const currentIndex = stages.indexOf(processStage);
+                const isActive = stage.key === processStage;
+                const isCompleted = stages.indexOf(stage.key) < currentIndex;
+                
+                return (
+                  <React.Fragment key={stage.key}>
+                    <div className="flex flex-col items-center gap-1.5">
+                      <div className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]" : isCompleted ? "bg-cyan-400/40" : "bg-zinc-700"}`} />
+                      <span className={`text-[8px] font-bold uppercase tracking-tighter ${isActive ? "text-cyan-400" : isCompleted ? "text-cyan-400/40" : "text-zinc-600"}`}>
+                        {stage.label}
+                      </span>
+                    </div>
+                    {i < 3 && <div className={`flex-1 h-[1px] mx-1 mb-3 ${stages.indexOf(stages[i+1]) <= currentIndex ? "bg-cyan-400/20" : "bg-zinc-800"}`} />}
+                  </React.Fragment>
+                );
+              })}
+            </div>
+          )}
+
           <div className="flex items-center gap-3">
             <ImageIcon className="w-3.5 h-3.5 text-zinc-500" />
             <p className="text-[10px] text-zinc-400 font-medium">
