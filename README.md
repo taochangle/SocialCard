@@ -86,6 +86,11 @@ npm run dev
 
 如果您有任何想法或建议，欢迎提交 **Issue** 或 **Pull Request**。
 
+[![Built with Gemini](https://img.shields.io/badge/Built%20with-Gemini%202.0-blue.svg)]()
+
 ---
 
 **SocialCard** - 让每一行代码的闪光点，都能被更多人看见。
+
+---
+*Created and maintained with ⚡️ by **Gemini 2.0**.*
