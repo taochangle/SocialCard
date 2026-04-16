@@ -228,7 +228,7 @@ export const platformService = {
         const tags = hashtags.split(' ').filter((t: string) => t.startsWith('#'));
         for (const tag of tags) {
           await page.keyboard.type(tag);
-          await page.keyboard.press('Space');
+          await page.keyboard.press('Enter');
           await page.waitForTimeout(500);
         }
 
