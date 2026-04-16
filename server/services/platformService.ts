@@ -180,13 +180,24 @@ export const platformService = {
           await page.waitForTimeout(2000);
         } catch (e) {}
         } else if (platform === "xiaohongshu") {
-          await page.goto("https://creator.xiaohongshu.com/publish/publish", { waitUntil: 'networkidle' });
+          await page.goto("https://creator.xiaohongshu.com/publish/publish?from=tab_switch&target=image", { waitUntil: 'networkidle' });
 
           console.log("[Publish] Uploading images to XHS sequentially...");
           // Upload Cover (0.png)
-          const fileInput = await page.waitForSelector('input[type="file"]');
-          await fileInput.setInputFiles(filePayloads[0]);
-          await page.waitForTimeout(3000);
+          try {
+            console.log("[Publish] Clicking '上传图片' button for the first image...");
+            const [fileChooser] = await Promise.all([
+              page.waitForEvent('filechooser'),
+              page.getByText('上传图片').first().click(),
+            ]);
+            await fileChooser.setFiles(filePayloads[0]);
+            await page.waitForTimeout(3000); // XHS needs more time to process cover
+          } catch (e) {
+            console.warn("[Publish] XHS '上传图片' click failed, falling back to direct input:", e.message);
+            const fileInput = await page.waitForSelector('input[type="file"]');
+            await fileInput.setInputFiles(filePayloads[0]);
+            await page.waitForTimeout(3000);
+          }
 
           // Upload remaining images
           if (filePayloads.length > 1) {
