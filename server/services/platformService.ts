@@ -203,9 +203,16 @@ export const platformService = {
           if (filePayloads.length > 1) {
             for (let i = 1; i < filePayloads.length; i++) {
               console.log(`[Publish] Uploading image ${i} to XHS...`);
-              const moreInput = await page.waitForSelector('.img-upload-area .entry input[type="file"]');
-              await moreInput.setInputFiles(filePayloads[i]);
-              await page.waitForTimeout(1000);
+              try {
+                const [fileChooser] = await Promise.all([
+                  page.waitForEvent('filechooser'),
+                  page.locator('.img-upload-area .entry').first().click(),
+                ]);
+                await fileChooser.setFiles(filePayloads[i]);
+                await page.waitForTimeout(1500); // Wait for each upload
+              } catch (e) {
+                console.warn(`[Publish] XHS additional image ${i} upload failed:`, e.message);
+              }
             }
           }
 
