@@ -6,3 +6,11 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# AI coding artifacts
+.planning/
+step.text
+
+# Local DB
+*.db
+*.db-journal
