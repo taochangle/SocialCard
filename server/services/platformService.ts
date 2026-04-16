@@ -123,32 +123,46 @@ export const platformService = {
         }
 
 
-        // 10. 选择音乐 (使用精确类名链路)
+        // 10. 选择音乐 (悬停触发“使用”按钮)
         console.log("[Publish] Selecting music...");
         try {
-          // Target span with class containing action- and text "选择音乐"
           const musicBtn = await page.locator('span[class*="action-"]:has-text("选择音乐")').first();
           await musicBtn.click();
           await page.waitForTimeout(2000);
-
-          // 根据用户提供的链路选择第一个音乐卡片
-          console.log("[Publish] Clicking the first music card...");
+          
           const musicCard = await page.locator('.semi-tabs-pane-motion-overlay .music-collection-container-cTsB7J .card-container-tmocjc').first();
-          await musicCard.click();
-          await page.waitForTimeout(1500);
+          
+          // 悬停在音乐卡片上以触发“使用”按钮出现
+          console.log("[Publish] Hovering over the first music card...");
+          await musicCard.hover();
+          await page.waitForTimeout(500);
 
-          // 确认使用（如果需要点击“使用”按钮，保留原有逻辑作为回退或补充）
           const useBtn = await page.locator('.music-item-use-btn').first();
           if (await useBtn.isVisible()) {
             await useBtn.click();
+            console.log("[Publish] Clicked 'Use' button for music.");
+          } else {
+            // 如果悬停没出按钮，尝试直接点击卡片
+            await musicCard.click();
           }
         } catch (e) {
           console.warn("[Publish] Could not select music:", e.message);
         }
 
-
-        console.log("[Publish] Ready to publish!");
+        // 11. 点击发布并确认状态
+        console.log("[Publish] Clicking publish button...");
         await page.locator('button').filter({ hasText: '发布' }).first().click();
+        
+        // 等待跳转并点击“审核中”
+        try {
+          console.log("[Publish] Waiting for management page and checking 'Under Review' status...");
+          await page.waitForURL("**/creator-micro/content/manage**", { timeout: 30000 });
+          const auditTab = await page.getByText('审核中').first();
+          await auditTab.click();
+          await page.waitForTimeout(2000); // 停留一会儿确认结果
+        } catch (e) {
+          console.warn("[Publish] Post-publish check failed (might have published too fast or URL differed):", e.message);
+        }
         } else if (platform === "xiaohongshu") {
           await page.goto("https://creator.xiaohongshu.com/publish/publish", { waitUntil: 'networkidle' });
 
