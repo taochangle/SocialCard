@@ -230,13 +230,13 @@ export const platformService = {
           await page.keyboard.type(tag);
           await page.keyboard.press('Enter');
           
-          // 等待并点击弹出的话题确认框
+          // 等待并点击弹出的话题确认框中的第一个选项
           try {
-            const topicContainer = await page.waitForSelector('.creator-editor-topic-container', { timeout: 3000 });
-            await topicContainer.click();
+            const firstItem = await page.waitForSelector('#creator-editor-topic-container .item', { timeout: 3000 });
+            await firstItem.click();
             await page.waitForTimeout(500);
           } catch (e) {
-            console.warn(`[Publish] Topic container for ${tag} not found or click failed:`, e.message);
+            console.warn(`[Publish] Topic item for ${tag} not found or click failed:`, e.message);
           }
         }
 
