@@ -80,19 +80,15 @@ export const platformService = {
         for (let i = 1; i < filePayloads.length; i++) {
           console.log(`[Publish] Uploading image ${i}...`);
           try {
-            // Click "继续添加" span
-            const continueAddBtn = await page.locator('span:has-text("继续添加")').first();
-            await continueAddBtn.click();
-            await page.waitForTimeout(1000);
-            
-            // The file input might be newly created or reused, find the last one or the visible one
-            const fileInputs = await page.$$('input[type="file"]');
-            const lastInput = fileInputs[fileInputs.length - 1];
-            await lastInput.setInputFiles(filePayloads[i]);
-            await page.waitForTimeout(1500);
+            // Use file chooser for "Continue Adding"
+            const [fileChooser] = await Promise.all([
+              page.waitForEvent('filechooser'),
+              page.locator('.continue-add-clE5aC').first().click(),
+            ]);
+            await fileChooser.setFiles(filePayloads[i]);
+            await page.waitForTimeout(2000); // Wait for upload progress
           } catch (e) {
-            console.warn(`[Publish] "Continue Adding" for image ${i} failed, trying direct input:`, e.message);
-            await firstInput.setInputFiles(filePayloads[i]);
+            console.warn(`[Publish] "Continue Adding" for image ${i} failed:`, e.message);
           }
         }
         
@@ -155,13 +151,13 @@ export const platformService = {
           // Find first music card in .music-collection-container-cTsB7J
           const musicCard = await page.locator('.music-collection-container-cTsB7J .card-container-tmocjc').first();
           
-          // Hover to reveal "Use" button
+          // Hover and wait for "Use" button
           console.log("[Publish] Hovering over trending music...");
           await musicCard.hover();
-          await page.waitForTimeout(1000);
-
-          // Click "使用"
-          const useBtn = await page.locator('button:has-text("使用"), .music-item-use-btn').first();
+          
+          const useBtnSelector = 'button:has-text("使用"), .music-item-use-btn';
+          await page.waitForSelector(useBtnSelector, { state: 'visible', timeout: 5000 });
+          const useBtn = await page.locator(useBtnSelector).first();
           await useBtn.click();
           console.log("[Publish] Music selected successfully.");
           
