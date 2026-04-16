@@ -68,19 +68,34 @@ export const platformService = {
       if (platform === "douyin") {
         await page.goto("https://creator.douyin.com/creator-micro/content/upload?default-tab=3", { waitUntil: 'networkidle' });
         
+        // 3. Upload images sequentially
         console.log("[Publish] Uploading images sequentially...");
-        const fileInput = await page.waitForSelector('input[type="file"]');
+        const firstInput = await page.waitForSelector('input[type="file"]');
         
         // Upload Cover (0.png)
-        await fileInput.setInputFiles(filePayloads[0]);
-        await page.waitForTimeout(2000);
+        await firstInput.setInputFiles(filePayloads[0]);
+        await page.waitForTimeout(3000);
 
-        // Upload remaining images
+        // Upload remaining images one by one via "Continue Adding"
         for (let i = 1; i < filePayloads.length; i++) {
           console.log(`[Publish] Uploading image ${i}...`);
-          await fileInput.setInputFiles(filePayloads[i]);
-          await page.waitForTimeout(1000);
+          try {
+            // Click "继续添加" span
+            const continueAddBtn = await page.locator('span:has-text("继续添加")').first();
+            await continueAddBtn.click();
+            await page.waitForTimeout(1000);
+            
+            // The file input might be newly created or reused, find the last one or the visible one
+            const fileInputs = await page.$$('input[type="file"]');
+            const lastInput = fileInputs[fileInputs.length - 1];
+            await lastInput.setInputFiles(filePayloads[i]);
+            await page.waitForTimeout(1500);
+          } catch (e) {
+            console.warn(`[Publish] "Continue Adding" for image ${i} failed, trying direct input:`, e.message);
+            await firstInput.setInputFiles(filePayloads[i]);
+          }
         }
+        
         // 6. 填充标题 (格式: YYYY-MM-DD)
         console.log("[Publish] Filling title...");
         const dateMatch = title.match(/(\d{4})[^\d](\d{1,2})[^\d](\d{1,2})/);
@@ -95,12 +110,13 @@ export const platformService = {
           await page.getByPlaceholder('添加作品标题').fill(formattedTitle);
         }
 
-
+        // 7. 填充描述
         console.log("[Publish] Filling description...");
         const editor = await page.waitForSelector('.zone-container .ace-line');
         await editor.click();
         await page.keyboard.type(content);
 
+        // 8. 添加话题
         console.log("[Publish] Adding hashtags...");
         const tags = hashtags.split(' ').filter((t: string) => t.startsWith('#'));
         for (const tag of tags) {
@@ -108,61 +124,70 @@ export const platformService = {
           await page.keyboard.press('Enter');
           await page.waitForTimeout(500);
         }
+
         // 9. 选择合集 (使用精准选择器)
         console.log("[Publish] Selecting collection...");
         try {
-          // 先寻找包含“不选择合集”文字的下拉框触发器
           const selectTrigger = await page.locator('.semi-select:has-text("不选择合集")').first();
           await selectTrigger.click();
           await page.waitForTimeout(1000);
-          // 在弹出的选项中寻找 "Github Trending"
           const option = await page.locator('.semi-select-option').filter({ hasText: 'Github Trending' }).first();
           await option.click();
         } catch (e) {
           console.warn("[Publish] Could not select collection:", e.message);
         }
 
-
-        // 10. 选择音乐 (悬停触发“使用”按钮)
+        // 10. 选择音乐 (抽屉 -> 热门榜 -> 悬停 -> 使用)
         console.log("[Publish] Selecting music...");
         try {
           const musicBtn = await page.locator('span[class*="action-"]:has-text("选择音乐")').first();
           await musicBtn.click();
+          
+          // Wait for sidesheet
+          console.log("[Publish] Waiting for music sidesheet...");
+          const sideSheet = await page.waitForSelector('.semi-sidesheet-inner-wrap', { timeout: 10000 });
+          
+          // Click "热门榜" tab
+          const hotTab = await sideSheet.waitForSelector('div:has-text("热门榜")');
+          await hotTab.click();
           await page.waitForTimeout(2000);
-          
-          const musicCard = await page.locator('.semi-tabs-pane-motion-overlay .music-collection-container-cTsB7J .card-container-tmocjc').first();
-          
-          // 悬停在音乐卡片上以触发“使用”按钮出现
-          console.log("[Publish] Hovering over the first music card...");
-          await musicCard.hover();
-          await page.waitForTimeout(500);
 
-          const useBtn = await page.locator('.music-item-use-btn').first();
-          if (await useBtn.isVisible()) {
-            await useBtn.click();
-            console.log("[Publish] Clicked 'Use' button for music.");
-          } else {
-            // 如果悬停没出按钮，尝试直接点击卡片
-            await musicCard.click();
-          }
+          // Find first music card in .music-collection-container-cTsB7J
+          const musicCard = await page.locator('.music-collection-container-cTsB7J .card-container-tmocjc').first();
+          
+          // Hover to reveal "Use" button
+          console.log("[Publish] Hovering over trending music...");
+          await musicCard.hover();
+          await page.waitForTimeout(1000);
+
+          // Click "使用"
+          const useBtn = await page.locator('button:has-text("使用"), .music-item-use-btn').first();
+          await useBtn.click();
+          console.log("[Publish] Music selected successfully.");
+          
         } catch (e) {
-          console.warn("[Publish] Could not select music:", e.message);
+          console.warn("[Publish] Complex music selection failed:", e.message);
         }
 
-        // 11. 点击发布并确认状态
-        console.log("[Publish] Clicking publish button...");
-        await page.locator('button').filter({ hasText: '发布' }).first().click();
+        // 11. 点击发布
+        console.log("[Publish] Clicking the main publish button...");
+        try {
+          const finalPublishBtn = await page.locator('button:has-text("发布")').last(); // Usually at bottom
+          await finalPublishBtn.scrollIntoViewIfNeeded();
+          await finalPublishBtn.click();
+          console.log("[Publish] Clicked publish button.");
+        } catch (e) {
+          console.error("[Publish] Final publish button click failed:", e.message);
+        }
         
         // 等待跳转并点击“审核中”
         try {
-          console.log("[Publish] Waiting for management page and checking 'Under Review' status...");
+          console.log("[Publish] Waiting for management page...");
           await page.waitForURL("**/creator-micro/content/manage**", { timeout: 30000 });
           const auditTab = await page.getByText('审核中').first();
           await auditTab.click();
-          await page.waitForTimeout(2000); // 停留一会儿确认结果
-        } catch (e) {
-          console.warn("[Publish] Post-publish check failed (might have published too fast or URL differed):", e.message);
-        }
+          await page.waitForTimeout(2000);
+        } catch (e) {}
         } else if (platform === "xiaohongshu") {
           await page.goto("https://creator.xiaohongshu.com/publish/publish", { waitUntil: 'networkidle' });
 
