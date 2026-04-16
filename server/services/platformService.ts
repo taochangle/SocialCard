@@ -232,6 +232,18 @@ export const platformService = {
         } catch (e) {}
 
         console.log("[Publish] Ready to publish!");
+        try {
+          await page.locator('button:has-text("发布")').first().click();
+          console.log("[Publish] XHS publish button clicked.");
+          
+          // 等待跳转并检查“审核中”
+          await page.waitForTimeout(3000);
+          await page.goto("https://creator.xiaohongshu.com/new/note-manager", { waitUntil: 'networkidle' });
+          await page.getByText('审核中').first().click();
+          await page.waitForTimeout(2000);
+        } catch (e) {
+          console.error("[Publish] XHS final steps failed:", e.message);
+        }
       }
 
       return { success: true, message: `Automation foundation reached for ${platform}` };
