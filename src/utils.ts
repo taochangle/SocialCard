@@ -19,14 +19,6 @@ const getLuminance = (bg: string) => {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 };
 
-// Returns a subtle border color that stays visible against a given background.
-// Dark backgrounds get a light border, light backgrounds get a dark one.
-export const getFrameBorderColor = (bg: string) => {
-  return getLuminance(bg) > 0.5
-    ? "rgba(0, 0, 0, 0.28)"
-    : "rgba(255, 255, 255, 0.36)";
-};
-
 // Mask for the uncovered top/bottom bands of the 9:16 shell.
 // Keeps the background color visible underneath, dimmed by a translucent scrim.
 export const getMaskGradient = (bg: string, direction: "top" | "bottom") => {

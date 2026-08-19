@@ -1,6 +1,6 @@
 import React from "react";
 import { Theme, RankingItem } from "../types";
-import { formatStars, getFrameBorderColor } from "../utils";
+import { formatStars } from "../utils";
 
 interface IndexCardProps {
   theme: Theme;
@@ -23,7 +23,6 @@ export const IndexCard: React.FC<IndexCardProps> = ({
       style={{
         backgroundColor: theme.cardBg,
         color: theme.textColor,
-        border: `2px solid ${getFrameBorderColor(theme.outerBg)}`,
       }}
     >
       {/* Index Mode Header */}
