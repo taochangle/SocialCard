@@ -1,5 +1,5 @@
 import React from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { Theme, RankingItem } from "../types";
 import { IndexCard } from "./IndexCard";
 import { DetailCard } from "./DetailCard";
@@ -22,6 +22,7 @@ interface PreviewPanelProps {
   keywordList: string[];
   avatarUrl?: string;
   statusMsg: string | null;
+  loading: boolean;
   isProcessing: boolean;
   processProgress: number;
   previewRef: React.RefObject<HTMLDivElement | null>;
@@ -47,6 +48,7 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({
   keywordList,
   avatarUrl,
   statusMsg,
+  loading,
   isProcessing,
   processProgress,
   previewRef,
@@ -116,6 +118,24 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({
             )}
           </div>
         </div>
+
+        {/* 批量生成遮罩：避免渲染期间看到预览逐张切换 */}
+        {loading && (
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 rounded-[2rem] bg-zinc-950/70 backdrop-blur-sm">
+            <Loader2 className="w-10 h-10 text-cyan-400 animate-spin" />
+            <p className="text-sm font-bold text-zinc-200">
+              {statusMsg || "正在批量生成图片…"}
+            </p>
+            {isProcessing && (
+              <div className="w-64 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-cyan-500 transition-all duration-300"
+                  style={{ width: `${processProgress}%` }}
+                />
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </main>
   );

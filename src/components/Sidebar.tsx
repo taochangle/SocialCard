@@ -85,7 +85,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </h1>
             {isProcessing ? (
               <div className="mt-1 text-[10px] font-mono text-cyan-400 animate-pulse">
-                AI 批量处理中: {processProgress}%
+                批量处理中: {processProgress}%
               </div>
             ) : (
               <p className="text-xs text-zinc-500 mt-1">
@@ -264,6 +264,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {TEMPLATES.map((tpl) => (
               <button
                 key={tpl.id}
+                disabled={loading}
                 onClick={() => {
                   setSelectedTemplate(tpl.id);
                   setTheme(tpl.theme);
@@ -272,7 +273,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   selectedTemplate === tpl.id
                     ? "border-cyan-400 ring-2 ring-cyan-400/20"
                     : "border-white/5 hover:border-white/20"
-                }`}
+                } ${loading ? "opacity-40 cursor-not-allowed" : ""}`}
                 style={{ background: tpl.theme.outerBg }}
                 title={tpl.name}
               >

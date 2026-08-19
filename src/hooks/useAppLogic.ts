@@ -257,24 +257,29 @@ export function useAppLogic() {
   const publishToPlatform = async (platform: string) => {
     if (!trendingData.length) return;
     setLoading(true);
+    setIsProcessing(true);
+    setProcessProgress(0);
     setStatusMsg(`正在准备 ${platform} 发布数据...`);
     try {
       const images: string[] = [];
       const originalMode = layoutMode;
       const originalIndex = currentIndex;
       const captureBase64 = async () => {
-        await new Promise((resolve) => setTimeout(resolve, 600));
+        await new Promise((resolve) => setTimeout(resolve, 200));
         await waitForImages(previewRef.current!);
-        return await toPng(previewRef.current!, { quality: 1, pixelRatio: 2, cacheBust: true });
+        return await toPng(previewRef.current!, { quality: 1, pixelRatio: 2 });
       };
       setLayoutMode("index");
       images.push(await captureBase64());
       const count = Math.min(trendingData.length, 15);
+      const total = count + 1;
+      setProcessProgress(Math.round((1 / total) * 100));
       for (let i = 0; i < count; i++) {
         setStatusMsg(`正在生成图片 ${i + 1}/${count}...`);
         applyProject(i);
         setLayoutMode("detail");
         images.push(await captureBase64());
+        setProcessProgress(Math.round(((i + 2) / total) * 100));
       }
       applyProject(originalIndex);
       setLayoutMode(originalMode);
@@ -301,6 +306,7 @@ export function useAppLogic() {
       setStatusMsg(`发布出错: ${err.message}`);
     } finally {
       setLoading(false);
+      setIsProcessing(false);
       setTimeout(() => setStatusMsg(null), 5000);
     }
   };
@@ -308,6 +314,8 @@ export function useAppLogic() {
   const exportImage = async () => {
     if (!previewRef.current || trendingData.length === 0) return;
     setLoading(true);
+    setIsProcessing(true);
+    setProcessProgress(0);
     setStatusMsg("正在批量生成图片…");
     try {
       const now = new Date();
@@ -318,21 +326,25 @@ export function useAppLogic() {
       const folder = zip.folder(folderName);
       if (!folder) throw new Error("Failed to create zip folder");
       const capture = async (filename: string) => {
-        await new Promise((resolve) => setTimeout(resolve, 600));
+        await new Promise((resolve) => setTimeout(resolve, 200));
         await waitForImages(previewRef.current!);
-        const dataUrl = await toPng(previewRef.current!, { quality: 1, pixelRatio: 2, cacheBust: true });
+        const dataUrl = await toPng(previewRef.current!, { quality: 1, pixelRatio: 2 });
         folder.file(filename, dataURLtoBlob(dataUrl));
       };
       const originalMode = layoutMode;
       const originalIndex = currentIndex;
+      const total = trendingData.length + 1;
       setLayoutMode("index");
       await capture("0.png");
+      setProcessProgress(Math.round((1 / total) * 100));
       for (let i = 0; i < trendingData.length; i++) {
         setStatusMsg(`正在生成第 ${i + 1}/${trendingData.length} 张…`);
         applyProject(i);
         setLayoutMode("detail");
         await capture(`${i + 1}.png`);
+        setProcessProgress(Math.round(((i + 2) / total) * 100));
       }
+      setProcessProgress(100);
       applyProject(originalIndex);
       setLayoutMode(originalMode);
       const zipBlob = await zip.generateAsync({ type: "blob" });
@@ -343,6 +355,7 @@ export function useAppLogic() {
       setStatusMsg("导出失败");
     } finally {
       setLoading(false);
+      setIsProcessing(false);
     }
   };
 

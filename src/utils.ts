@@ -11,6 +11,17 @@ export const formatStars = (stars: string) => {
   return String(num);
 };
 
+// Returns a subtle border color that stays visible against a given background.
+// Dark backgrounds get a light border, light backgrounds get a dark one.
+export const getFrameBorderColor = (bg: string) => {
+  const hex = bg.replace("#", "");
+  const [r, g, b] = [0, 2, 4].map((i) =>
+    parseInt(hex.slice(i, i + 2), 16) / 255
+  );
+  const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  return luminance > 0.5 ? "rgba(0, 0, 0, 0.28)" : "rgba(255, 255, 255, 0.36)";
+};
+
 export const dataURLtoBlob = (dataUrl: string) => {
   const arr = dataUrl.split(",");
   const mime = arr[0].match(/:(.*?);/)?.[1] || "image/png";

@@ -20,7 +20,7 @@ export const TEMPLATES: Template[] = [
       outerBg: "#BDF1E6",
       cardBg: "#A9EAD9",
       textColor: "#172033",
-      accentColor: "#1F9D72",
+      accentColor: "#12664B",
     },
   },
   {
@@ -30,8 +30,8 @@ export const TEMPLATES: Template[] = [
     theme: {
       outerBg: "#F37CB2",
       cardBg: "#F3F1F4",
-      textColor: "#11D5BC",
-      accentColor: "#FF6FB5",
+      textColor: "#0F766E",
+      accentColor: "#D6336C",
     },
   },
   {
@@ -42,7 +42,7 @@ export const TEMPLATES: Template[] = [
       outerBg: "#F7B36C",
       cardBg: "#FAFAF7",
       textColor: "#734019",
-      accentColor: "#FFB703",
+      accentColor: "#B45309",
     },
   },
   {
@@ -53,7 +53,7 @@ export const TEMPLATES: Template[] = [
       outerBg: "#D1D5DB",
       cardBg: "#F9FAFB",
       textColor: "#1F2937",
-      accentColor: "#3B82F6",
+      accentColor: "#2563EB",
     },
   },
   {
@@ -63,7 +63,7 @@ export const TEMPLATES: Template[] = [
     theme: {
       outerBg: "#FF9F1C",
       cardBg: "#FFFFFF",
-      textColor: "#2EC4B6",
+      textColor: "#0F766E",
       accentColor: "#E71D36",
     },
   },
@@ -75,7 +75,7 @@ export const TEMPLATES: Template[] = [
       outerBg: "#4F46E5",
       cardBg: "#FFFFFF",
       textColor: "#1E1B4B",
-      accentColor: "#818CF8",
+      accentColor: "#6366F1",
     },
   },
   {
@@ -86,7 +86,7 @@ export const TEMPLATES: Template[] = [
       outerBg: "#E5E7EB",
       cardBg: "#FFFFFF",
       textColor: "#374151",
-      accentColor: "#9CA3AF",
+      accentColor: "#6B7280",
     },
   },
   {
@@ -130,7 +130,7 @@ export const TEMPLATES: Template[] = [
       outerBg: "#FF7E5F",
       cardBg: "#FEB47B",
       textColor: "#5F2C1F",
-      accentColor: "#FFFFFF",
+      accentColor: "#7C2D12",
     },
   },
 ];

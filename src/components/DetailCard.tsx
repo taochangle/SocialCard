@@ -1,6 +1,6 @@
 import React from "react";
 import { Theme } from "../types";
-import { formatStars } from "../utils";
+import { formatStars, getFrameBorderColor } from "../utils";
 
 interface DetailCardProps {
   theme: Theme;
@@ -31,6 +31,7 @@ export const DetailCard: React.FC<DetailCardProps> = ({
       style={{
         backgroundColor: theme.cardBg,
         color: theme.textColor,
+        border: `2px solid ${getFrameBorderColor(theme.outerBg)}`,
       }}
     >
       {/* Detail Mode Header */}

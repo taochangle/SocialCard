@@ -5,7 +5,7 @@ export const platformService = {
   async login(platform: string) {
     let browser;
     try {
-      browser = await chromium.launch({ headless: false });
+      browser = await chromium.launch({ headless: false, channel: "chrome" });
       const context = await browser.newContext();
       const page = await context.newPage();
 
@@ -56,7 +56,7 @@ export const platformService = {
     let browser;
     try {
       console.log(`[Publish] Starting automated post to ${platform}...`);
-      browser = await chromium.launch({ headless: false });
+      browser = await chromium.launch({ headless: false, channel: "chrome" });
       const state = JSON.parse(session.state);
       const context = await browser.newContext({ 
         storageState: state,

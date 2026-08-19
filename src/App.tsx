@@ -60,6 +60,7 @@ export default function App() {
         keywordList={logic.keywordList}
         avatarUrl={logic.avatarUrl}
         statusMsg={logic.statusMsg}
+        loading={logic.loading}
         isProcessing={logic.isProcessing}
         processProgress={logic.processProgress}
         previewRef={logic.previewRef}
