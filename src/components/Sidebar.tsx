@@ -420,7 +420,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-white text-zinc-950 font-black text-sm hover:bg-cyan-400 transition-all active:scale-[0.98] shadow-lg shadow-white/5"
         >
           <Download className="w-4 h-4" />
-          导出 3:4 高清图
+          导出 9:16 高清图
         </button>
       </div>
     </aside>

@@ -11,15 +11,30 @@ export const formatStars = (stars: string) => {
   return String(num);
 };
 
-// Returns a subtle border color that stays visible against a given background.
-// Dark backgrounds get a light border, light backgrounds get a dark one.
-export const getFrameBorderColor = (bg: string) => {
+const getLuminance = (bg: string) => {
   const hex = bg.replace("#", "");
   const [r, g, b] = [0, 2, 4].map((i) =>
     parseInt(hex.slice(i, i + 2), 16) / 255
   );
-  const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  return luminance > 0.5 ? "rgba(0, 0, 0, 0.28)" : "rgba(255, 255, 255, 0.36)";
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+
+// Returns a subtle border color that stays visible against a given background.
+// Dark backgrounds get a light border, light backgrounds get a dark one.
+export const getFrameBorderColor = (bg: string) => {
+  return getLuminance(bg) > 0.5
+    ? "rgba(0, 0, 0, 0.28)"
+    : "rgba(255, 255, 255, 0.36)";
+};
+
+// Mask for the uncovered top/bottom bands of the 9:16 shell.
+// Keeps the background color visible underneath, dimmed by a translucent scrim.
+export const getMaskGradient = (bg: string, direction: "top" | "bottom") => {
+  const channel = getLuminance(bg) > 0.5 ? "0, 0, 0" : "255, 255, 255";
+  const stops = [0.6, 0.35, 0.15];
+  return direction === "top"
+    ? `linear-gradient(to bottom, rgba(${channel}, ${stops[0]}), rgba(${channel}, ${stops[1]}), rgba(${channel}, ${stops[2]}))`
+    : `linear-gradient(to top, rgba(${channel}, ${stops[0]}), rgba(${channel}, ${stops[1]}), rgba(${channel}, ${stops[2]}))`;
 };
 
 export const dataURLtoBlob = (dataUrl: string) => {

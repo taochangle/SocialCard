@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { Theme, RankingItem } from "../types";
 import { IndexCard } from "./IndexCard";
 import { DetailCard } from "./DetailCard";
+import { getMaskGradient } from "../utils";
 
 interface PreviewPanelProps {
   layoutMode: "index" | "detail";
@@ -88,34 +89,59 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({
       </div>
 
       <div className="w-full max-w-2xl flex flex-col items-center relative z-10">
-        {/* 3:4 容器 */}
+        {/* 9:16 外壳：中间保留原 3:4 卡片，上下未覆盖区域用蒙版填充 */}
         <div
           ref={previewRef}
-          className="w-full aspect-[3/4] max-h-[85vh] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] overflow-hidden relative"
-          style={{ backgroundColor: theme.outerBg }}
+          className="w-full aspect-[9/16] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] overflow-hidden relative flex flex-col"
+          style={{
+            backgroundColor: theme.outerBg,
+            maxWidth: "calc(85vh * 9 / 16)",
+          }}
         >
-          <div className="absolute inset-0 flex items-center justify-center p-[7%]">
-            {layoutMode === "detail" ? (
-              <DetailCard
-                theme={theme}
-                projectName={projectName}
-                projectUrl={projectUrl}
-                stars={stars}
-                starsToday={starsToday}
-                currentIndex={currentIndex}
-                highlightedHtml={highlightedHtml}
-                keywordList={keywordList}
-                avatarUrl={avatarUrl}
-              />
-            ) : (
-              <IndexCard
-                theme={theme}
-                displayDate={displayDate}
-                timeText={timeText}
-                authorName={authorName}
-                trendingData={trendingData}
-              />
-            )}
+          {/* 顶部蒙版：背景色 + 遮罩 */}
+          <div className="relative flex-1 min-h-0 overflow-hidden">
+            <div
+              className="absolute inset-0"
+              style={{ background: getMaskGradient(theme.outerBg, "top") }}
+            />
+          </div>
+
+          {/* 中部 3:4 卡片（保持原样） */}
+          <div
+            className="relative shrink-0 w-full aspect-[3/4] overflow-hidden"
+            style={{ backgroundColor: theme.outerBg }}
+          >
+            <div className="absolute inset-0 flex items-center justify-center p-[7%]">
+              {layoutMode === "detail" ? (
+                <DetailCard
+                  theme={theme}
+                  projectName={projectName}
+                  projectUrl={projectUrl}
+                  stars={stars}
+                  starsToday={starsToday}
+                  currentIndex={currentIndex}
+                  highlightedHtml={highlightedHtml}
+                  keywordList={keywordList}
+                  avatarUrl={avatarUrl}
+                />
+              ) : (
+                <IndexCard
+                  theme={theme}
+                  displayDate={displayDate}
+                  timeText={timeText}
+                  authorName={authorName}
+                  trendingData={trendingData}
+                />
+              )}
+            </div>
+          </div>
+
+          {/* 底部蒙版：背景色 + 遮罩 */}
+          <div className="relative flex-1 min-h-0 overflow-hidden">
+            <div
+              className="absolute inset-0"
+              style={{ background: getMaskGradient(theme.outerBg, "bottom") }}
+            />
           </div>
         </div>
 
