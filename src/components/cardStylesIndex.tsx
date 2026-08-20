@@ -1,13 +1,13 @@
 import React from "react";
 import { Star, Flame, Zap, Brain, Rocket, BookOpen, Heart, MessageCircle, Repeat2, BarChart2, Send, Bookmark, Play, BadgeCheck, Lock, Camera, Flashlight } from "lucide-react";
 import { CardStyle } from "../types";
-import { IndexStyleProps, pad, formatStars } from "./cardStyleProps";
+import { IndexStyleProps, pad, formatStars, L } from "./cardStyleProps";
 
 type Variant = React.FC<IndexStyleProps>;
 const NOTIFY_ICONS = [Flame, Zap, Brain, Rocket, BookOpen];
 
 const base = (p: IndexStyleProps, cls = "", extra?: React.CSSProperties) => ({
-  className: `w-full h-full rounded-2xl relative overflow-hidden flex flex-col ${cls}`,
+  className: `w-full h-full relative overflow-hidden flex flex-col ${p.fullBleed ? "" : "rounded-2xl"} ${cls}`,
   style: {
     backgroundColor: p.theme.cardBg,
     color: p.theme.textColor,
@@ -33,7 +33,7 @@ const Classic: Variant = (p) => (
             className="text-xs font-mono font-black"
             style={{ color: idx < 3 ? p.theme.accentColor : "inherit", opacity: idx < 3 ? 1 : 0.3 }}
           >
-            {formatStars(item.stars || "")} 今日:{item.starsToday || "0"}
+            {formatStars(item.stars || "")} {L(p.lang, "今日", "Today")}:{item.starsToday || "0"}
           </span>
         </div>
       ))}
@@ -44,7 +44,7 @@ const Classic: Variant = (p) => (
         <div className="font-mono text-[9px] uppercase tracking-widest">{p.timeText}</div>
       </div>
       <img
-        src="/my-avatar.jpg"
+        src={p.authorAvatar}
         alt="author"
         crossOrigin="anonymous"
         className="w-14 h-14 rounded-full border-2 border-white/10 shadow-md object-cover"
@@ -60,20 +60,20 @@ const Poster: Variant = (p) => (
       <span className="text-[10px] font-black tracking-[0.3em] uppercase opacity-50">Daily Ranking</span>
       <span className="text-[10px] font-mono opacity-40">{p.displayDate}</span>
     </div>
-    <h2 className="text-[clamp(2.4rem,9vw,4.2rem)] font-black leading-[0.95] tracking-tighter">
+    <h2 className={`font-black leading-[0.95] tracking-tighter ${p.fullBleed ? "text-[clamp(1.8rem,6vw,3rem)]" : "text-[clamp(2.4rem,9vw,4.2rem)]"}`}>
       GitHub
       <br />
       <span style={{ color: p.theme.accentColor }}>Trending</span>
     </h2>
     <div className="mt-3 h-[3px] w-16 rounded-full" style={{ backgroundColor: p.theme.accentColor }} />
-    <div className="flex-1 flex flex-col justify-center gap-2.5 py-2">
-      {p.trendingData.slice(0, 5).map((item, idx) => (
+    <div className={`flex-1 flex flex-col justify-center py-2 ${p.fullBleed ? "gap-1.5" : "gap-2.5"}`}>
+      {(p.fullBleed ? p.trendingData : p.trendingData.slice(0, 5)).map((item, idx) => (
         <div key={item.id || idx} className="flex items-center gap-3">
-          <span className="text-2xl font-black font-mono" style={{ color: idx === 0 ? p.theme.accentColor : undefined, opacity: idx === 0 ? 1 : 0.45 }}>
+          <span className={`font-black font-mono ${p.fullBleed ? "text-base" : "text-2xl"}`} style={{ color: idx === 0 ? p.theme.accentColor : undefined, opacity: idx === 0 ? 1 : 0.45 }}>
             {pad(idx)}
           </span>
-          <span className="flex-1 text-base font-bold tracking-tight truncate">{item.title}</span>
-          <span className="text-sm font-mono font-black opacity-60">{formatStars(item.stars || "")}</span>
+          <span className={`flex-1 font-bold tracking-tight truncate ${p.fullBleed ? "text-[12px]" : "text-base"}`}>{item.title}</span>
+          <span className={`font-mono font-black opacity-60 ${p.fullBleed ? "text-[10px]" : "text-sm"}`}>{formatStars(item.stars || "")}</span>
         </div>
       ))}
     </div>
@@ -87,14 +87,14 @@ const Poster: Variant = (p) => (
 const Terminal: Variant = (p) => (
   <div {...base(p, "font-mono")}>
     <div className="flex items-center gap-1.5 px-4 py-3 bg-white/[0.06] border-b border-white/10">
-      <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
-      <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
-      <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
+      <span className="w-3.5 h-3.5 rounded-full bg-[#ff5f56]" />
+      <span className="w-3.5 h-3.5 rounded-full bg-[#ffbd2e]" />
+      <span className="w-3.5 h-3.5 rounded-full bg-[#27c93f]" />
       <span className="ml-3 text-[12px] opacity-50">github-trending — zsh</span>
     </div>
     <div className="flex-1 px-5 py-4 flex flex-col gap-2.5 overflow-hidden">
       <div className="opacity-50 text-[12px]">$ ./trend.sh --top 15 --date {p.displayDate}</div>
-      <div className="text-[13px] opacity-70 mb-1" style={{ color: p.theme.accentColor }}># 今日 GitHub 爆火项目 Top{p.trendingData.length}</div>
+      <div className="text-[13px] opacity-70 mb-1" style={{ color: p.theme.accentColor }}># {L(p.lang, "今日 GitHub 爆火项目", "Hottest GitHub Projects Today")} Top{p.trendingData.length}</div>
       {p.trendingData.slice(0, 15).map((item, idx) => (
         <div key={item.id || idx} className="flex items-center gap-2 text-[13px] leading-relaxed whitespace-nowrap">
           <span style={{ color: p.theme.accentColor }}>#{pad(idx)}</span>
@@ -125,7 +125,7 @@ const Magazine: Variant = (p) => (
         <div key={item.id || idx} className="flex items-baseline gap-2">
           <span className="w-6 font-mono text-[11px] opacity-30 font-bold">{pad(idx)}</span>
           <span className="flex-1 text-sm font-semibold tracking-tight truncate">{item.title}</span>
-          <span className="text-[10px] font-mono opacity-40">{item.starsToday ? `今日 +${item.starsToday}` : ""}</span>
+          <span className="text-[10px] font-mono opacity-40">{item.starsToday ? `{L(p.lang, "今日", "Today")} +${item.starsToday}` : ""}</span>
           <span className="text-xs font-mono font-bold opacity-70">{formatStars(item.stars || "")}</span>
         </div>
       ))}
@@ -227,7 +227,7 @@ const Chat: Variant = (p) => (
       <div className="w-9 h-9 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-sm"><Star className="w-4 h-4 fill-current" /></div>
       <div className="flex-1">
         <div className="text-[13px] font-black leading-none">Trending Notify</div>
-        <div className="text-[9px] text-emerald-400 mt-1">● 实时推送中</div>
+        <div className="text-[9px] text-emerald-400 mt-1">● {L(p.lang, "实时推送中", "Live")}</div>
       </div>
       <span className="px-2 py-0.5 rounded-full bg-red-500 text-[9px] font-bold">{p.trendingData.length}</span>
     </div>
@@ -236,15 +236,15 @@ const Chat: Variant = (p) => (
         <div key={item.id || idx} className="flex gap-2 items-end">
           <div className="w-6 h-6 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-[9px]"><Star className="w-3 h-3 fill-current" /></div>
           <div className="max-w-[80%] rounded-2xl rounded-bl-sm bg-white/10 border border-white/10 px-3 py-2">
-            <div className="text-[10px] font-bold text-cyan-300">#{pad(idx)} 今日热榜</div>
+            <div className="text-[10px] font-bold text-cyan-300">#{pad(idx)} {L(p.lang, "今日热榜", "Trending Today")}</div>
             <div className="text-[11px] font-bold mt-0.5">{item.title}</div>
-            <div className="font-mono text-[9px] opacity-60 mt-1">★{formatStars(item.stars || "")} · 今日 +{item.starsToday || "0"}</div>
+            <div className="font-mono text-[9px] opacity-60 mt-1">★{formatStars(item.stars || "")} · {L(p.lang, "今日", "Today")} +{item.starsToday || "0"}</div>
           </div>
         </div>
       ))}
     </div>
     <div className="px-4 py-3 border-t border-white/10 flex justify-between text-[9px] text-zinc-500">
-      <span>已读 · {p.displayDate} {p.timeText}</span>
+      <span>{L(p.lang, "已读", "Read")} · {p.displayDate} {p.timeText}</span>
       <span className="font-mono">@{p.authorName}</span>
     </div>
   </div>
@@ -264,14 +264,14 @@ const Neon: Variant = (p) => (
       </h2>
       <div className="mt-2 h-px w-full bg-gradient-to-r from-cyan-400/60 via-white/20 to-fuchsia-400/60" />
     </div>
-    <div className="relative flex-1 flex flex-col gap-3 py-3">
-      {p.trendingData.slice(0, 8).map((item, idx) => (
+    <div className={`relative flex-1 flex flex-col py-3 ${p.fullBleed ? "gap-2" : "gap-3"}`}>
+      {(p.fullBleed ? p.trendingData : p.trendingData.slice(0, 8)).map((item, idx) => (
         <div key={item.id || idx} className="flex items-center gap-3">
-          <span className="text-2xl font-black font-mono text-cyan-300" style={{ opacity: idx === 0 ? 1 : 0.5, textShadow: idx === 0 ? "0 0 14px rgba(34,211,238,0.9)" : undefined }}>
+          <span className={`font-black font-mono text-cyan-300 ${p.fullBleed ? "text-lg" : "text-2xl"}`} style={{ opacity: idx === 0 ? 1 : 0.5, textShadow: idx === 0 ? "0 0 14px rgba(34,211,238,0.9)" : undefined }}>
             {pad(idx)}
           </span>
-          <span className="flex-1 text-[16px] font-bold truncate">{item.title}</span>
-          <span className="text-[13px] font-mono font-bold text-fuchsia-300" style={{ opacity: idx === 0 ? 1 : 0.6 }}>{formatStars(item.stars || "")}</span>
+          <span className={`flex-1 font-bold truncate ${p.fullBleed ? "text-[12px]" : "text-[16px]"}`}>{item.title}</span>
+          <span className={`font-mono font-bold text-fuchsia-300 ${p.fullBleed ? "text-[10px]" : "text-[13px]"}`} style={{ opacity: idx === 0 ? 1 : 0.6 }}>{formatStars(item.stars || "")}</span>
         </div>
       ))}
     </div>
@@ -291,12 +291,12 @@ const Newspaper: Variant = (p) => (
       </div>
     </div>
     <div className="mt-4">
-      <div className="text-[20px] font-black leading-tight" style={{ fontFamily: "Georgia, serif" }}>{p.trendingData[0]?.title.split("/")[1]} 领跑今日热榜</div>
+      <div className="text-[20px] font-black leading-tight" style={{ fontFamily: "Georgia, serif" }}>{p.trendingData[0]?.title.split("/")[1]} {L(p.lang, "领跑今日热榜", "Leads Today's Ranking")}</div>
       <p className="text-[11px] leading-relaxed mt-1.5 opacity-80">{p.trendingData[0]?.content || ""}</p>
       <div className="mt-2 h-px bg-[#191512]/40" />
     </div>
     <div className="mt-2 flex-1">
-      <div className="text-[9px] font-black tracking-[0.25em] uppercase mb-1.5">Briefs · 简讯</div>
+      <div className="text-[9px] font-black tracking-[0.25em] uppercase mb-1.5">Briefs · {L(p.lang, "简讯", "Digest")}</div>
       <div className="flex flex-col justify-between flex-1 gap-1">
         {p.trendingData.slice(1, 8).map((item, idx) => (
           <div key={item.id || idx} className="flex items-baseline gap-1 text-[10px]">
@@ -318,13 +318,13 @@ const Minimal: Variant = (p) => (
   <div {...base(p, "items-center px-[9%] py-[9%]", { backgroundColor: "#ffffff", color: "#18181b" })}>
     <span className="font-mono text-[9px] tracking-[0.35em] uppercase opacity-40">GitHub Trending</span>
     <div className="flex-1 flex flex-col items-center justify-center">
-      <div className="text-[88px] font-black leading-none tracking-tighter">{p.trendingData.length}</div>
+      <div className={`font-black leading-none tracking-tighter ${p.fullBleed ? "text-[56px]" : "text-[88px]"}`}>{p.trendingData.length}</div>
       <div className="font-mono text-[10px] tracking-[0.3em] uppercase opacity-40 mt-2">Projects Today</div>
       <div className="w-10 h-[2px] bg-zinc-900 mt-6" />
-      <div className="mt-6 space-y-3">
-        {p.trendingData.slice(0, 3).map((item, idx) => (
-          <div key={item.id || idx} className="flex gap-3 text-[14px]">
-            <span className="font-mono opacity-40">{pad(idx)}</span>
+      <div className={`mt-6 ${p.fullBleed ? "space-y-1.5" : "space-y-3"}`}>
+        {(p.fullBleed ? p.trendingData : p.trendingData.slice(0, 3)).map((item, idx) => (
+          <div key={item.id || idx} className={`flex gap-3 ${p.fullBleed ? "text-[11px]" : "text-[14px]"}`}>
+            <span className="font-mono opacity-40 w-5">{pad(idx)}</span>
             <span className="font-semibold">{item.title.split("/")[1] || item.title}</span>
             <span className="font-mono opacity-50 ml-auto">{formatStars(item.stars || "")}</span>
           </div>
@@ -342,8 +342,8 @@ const Notebook: Variant = (p) => (
   <div {...base(p, "px-[8%] py-[7%] relative", { backgroundColor: "#fbf7ef", color: "#3a332b" })}>
     <div className="absolute top-0 left-6 w-24 h-6 bg-amber-200/90 -rotate-6" />
     <div className="absolute top-0 right-6 w-20 h-6 bg-rose-200/90 rotate-3" />
-    <h2 className="text-[34px] leading-none mt-4" style={{ fontFamily: "'Caveat', cursive" }}>今日 GitHub 爆火</h2>
-    <div className="font-mono text-[9px] opacity-50 mt-1">{p.displayDate} · 手账</div>
+    <h2 className="text-[34px] leading-none mt-4" style={{ fontFamily: "'Caveat', cursive" }}>{L(p.lang, "今日 GitHub 爆火", "GitHub Trending Today")}</h2>
+    <div className="font-mono text-[9px] opacity-50 mt-1">{p.displayDate} · {L(p.lang, "手账", "Journal")}</div>
       <div className="flex-1 flex flex-col gap-3 mt-4">
       {p.trendingData.slice(0, 8).map((item, idx) => (
         <div key={item.id || idx} className="flex items-center gap-2 text-[15px]">
@@ -354,10 +354,10 @@ const Notebook: Variant = (p) => (
       ))}
     </div>
     <div className="flex gap-2 mt-4">
-      <span className="px-2 py-1 rounded bg-amber-200/70 -rotate-3 text-[10px] font-bold flex items-center gap-1">AI 火 <Flame className="w-3.5 h-3.5" /></span>
-      <span className="px-2 py-1 rounded bg-emerald-200/70 rotate-2 text-[10px] font-bold">涨粉神器</span>
+      <span className="px-2 py-1 rounded bg-amber-200/70 -rotate-3 text-[10px] font-bold flex items-center gap-1">AI {L(p.lang, "火", "HOT")} <Flame className="w-3.5 h-3.5" /></span>
+      <span className="px-2 py-1 rounded bg-emerald-200/70 rotate-2 text-[10px] font-bold">{L(p.lang, "涨粉神器", "Follower Magnet")}</span>
     </div>
-    <div className="mt-3 text-[20px] opacity-60" style={{ fontFamily: "'Caveat', cursive" }}>—— @{p.authorName} 记</div>
+    <div className="mt-3 text-[20px] opacity-60" style={{ fontFamily: "'Caveat', cursive" }}>—— @{p.authorName} {L(p.lang, "记", "notes")}</div>
   </div>
 );
 
@@ -582,20 +582,20 @@ const Sign: Variant = (p) => (
 const Toc: Variant = (p) => (
   <div {...base(p, "px-[9%] py-[8%]", { backgroundColor: "#2a1f3d", color: "#f0e9d8" })}>
     <div className="text-[8px] font-black tracking-[0.35em] uppercase opacity-60">2026 · Vol.1</div>
-    <h2 className="text-[28px] font-black leading-tight mt-2" style={{ fontFamily: "Georgia, serif" }}>今日开源<br />爆款名录</h2>
+    <h2 className="text-[28px] font-black leading-tight mt-2" style={{ fontFamily: "Georgia, serif" }}>{L(p.lang, "今日开源", "Open Source Today")}<br />{L(p.lang, "爆款名录", "Hits List")}</h2>
     <div className="mt-3 h-px w-full bg-[#f0e9d8]/30" />
     <div className="mt-3 text-[9px] font-black tracking-[0.3em] uppercase text-amber-300/90">Contents</div>
     <div className="flex-1 flex flex-col justify-between py-2">
       {p.trendingData.slice(0, 7).map((item, idx) => (
         <div key={item.id || idx} className="flex items-baseline gap-2 text-[11px]">
-          <span className="font-black" style={{ fontFamily: "Georgia, serif" }}>{["壹", "贰", "叁", "肆", "伍", "陆", "柒"][idx]}</span>
+          <span className="font-black" style={{ fontFamily: "Georgia, serif" }}>{(p.lang === "en" ? ["I", "II", "III", "IV", "V", "VI", "VII"] : ["壹", "贰", "叁", "肆", "伍", "陆", "柒"])[idx]}</span>
           <span className="flex-1 truncate">{item.title}</span>
           <span className="font-mono text-[9px] opacity-60">{formatStars(item.stars || "")}★</span>
         </div>
       ))}
     </div>
     <div className="pt-3 border-t border-[#f0e9d8]/30 flex justify-between text-[9px] uppercase tracking-[0.25em] opacity-70">
-      <span>@{p.authorName} 编</span>
+      <span>@{p.authorName} {L(p.lang, "编", "ed.")}</span>
       <span className="font-mono">P.{p.trendingData.length}</span>
     </div>
   </div>
@@ -604,7 +604,7 @@ const Toc: Variant = (p) => (
 const Notify: Variant = (p) => (
   <div {...base(p, "gap-2.5 px-[6%] py-[6%]", { background: "linear-gradient(to bottom, #14171c, #0b0d10)", color: "#ffffff" })}>
     <div className="flex items-center gap-2.5">
-      <img src="/my-avatar.jpg" alt="author" crossOrigin="anonymous" className="w-8 h-8 rounded-full object-cover" referrerPolicy="no-referrer" />
+      <img src={p.authorAvatar} alt="author" crossOrigin="anonymous" className="w-8 h-8 rounded-full object-cover" referrerPolicy="no-referrer" />
       <div className="min-w-0 flex-1">
         <div className="text-[11px] font-bold leading-none">{p.authorName}</div>
         <div className="text-[8px] text-zinc-500 mt-0.5">Trending Notify · {p.displayDate}</div>
@@ -617,7 +617,7 @@ const Notify: Variant = (p) => (
           {(() => { const Icon = NOTIFY_ICONS[idx] || Star; return <Icon className="w-4 h-4" />; })()}
         </div>
         <div className="min-w-0 flex-1">
-          <div className="text-[10px] font-bold" style={{ color: p.theme.accentColor }}>#{pad(idx)} 今日热榜</div>
+          <div className="text-[10px] font-bold" style={{ color: p.theme.accentColor }}>#{pad(idx)} {L(p.lang, "今日热榜", "Trending Today")}</div>
           <div className="text-[11px] font-bold truncate mt-0.5">{item.title}</div>
           <div className="text-[9px] text-zinc-400 mt-0.5">+{item.starsToday || "0"} stars today</div>
         </div>
@@ -648,11 +648,11 @@ const Receipt: Variant = (p) => (
         <span>{p.trendingData.slice(0, 8).reduce((sum, i) => sum + (parseFloat(String(i.stars).replace(/k/gi, "").replace(/,/g, "")) || 0), 0)}k</span>
       </div>
       <div className="flex justify-between text-[10px] opacity-70">
-        <span>支付方式</span>
+        <span>{L(p.lang, "支付方式", "Payment Method")}</span>
         <span className="flex items-center gap-1">STAR <Star className="w-3 h-3" /></span>
       </div>
       <div className="border-t border-dashed border-zinc-400 pt-1.5" />
-      <div className="text-center text-[9px] opacity-70 flex items-center justify-center gap-1">谢谢支持开源 <Heart className="w-3 h-3" /> @{p.authorName}</div>
+      <div className="text-center text-[9px] opacity-70 flex items-center justify-center gap-1">{L(p.lang, "谢谢支持开源", "Thanks for supporting open source")} <Heart className="w-3 h-3" /> @{p.authorName}</div>
     </div>
     <div className="px-6 pb-4 flex justify-center">
       <div className="h-6 w-[70%] opacity-70" style={{ background: "repeating-linear-gradient(90deg, #1d1d1d 0 2px, transparent 2px 5px)" }} />
@@ -700,12 +700,12 @@ const Cyber: Variant = (p) => (
       <span className="font-mono text-[9px] text-fuchsia-300">{p.displayDate}</span>
     </div>
     <h2 className="relative mt-3 text-3xl font-black tracking-tight [text-shadow:0_0_18px_rgba(34,211,238,0.5)]">GITHUB<br />TRENDING</h2>
-    <div className="relative flex-1 flex flex-col gap-3 py-3">
-      {p.trendingData.slice(0, 5).map((item, idx) => (
-        <div key={item.id || idx} className={`flex items-center gap-2.5 px-3 ${idx === 0 ? "py-2 border border-cyan-400/30 bg-cyan-400/5" : "py-1.5"}`}>
-          <span className="font-mono text-base font-black text-cyan-300" style={{ opacity: idx === 0 ? 1 : 0.5 }}>{pad(idx)}</span>
-          <span className="flex-1 text-[15px] font-bold truncate" style={{ opacity: idx === 0 ? 1 : 0.8 }}>{item.title}</span>
-          <span className="font-mono text-[12px] text-fuchsia-300" style={{ opacity: idx === 0 ? 1 : 0.5 }}>{formatStars(item.stars || "")}★</span>
+    <div className={`relative flex-1 flex flex-col py-3 ${p.fullBleed ? "gap-2" : "gap-3"}`}>
+      {(p.fullBleed ? p.trendingData : p.trendingData.slice(0, 5)).map((item, idx) => (
+        <div key={item.id || idx} className={`flex items-center gap-2.5 px-3 ${idx === 0 ? "border border-cyan-400/30 bg-cyan-400/5" : ""} ${p.fullBleed ? "py-0.5" : idx === 0 ? "py-2" : "py-1.5"}`}>
+          <span className={`font-mono font-black text-cyan-300 ${p.fullBleed ? "text-[12px]" : "text-base"}`} style={{ opacity: idx === 0 ? 1 : 0.5 }}>{pad(idx)}</span>
+          <span className={`flex-1 font-bold truncate ${p.fullBleed ? "text-[11px]" : "text-[15px]"}`} style={{ opacity: idx === 0 ? 1 : 0.8 }}>{item.title}</span>
+          <span className={`font-mono text-fuchsia-300 ${p.fullBleed ? "text-[10px]" : "text-[12px]"}`} style={{ opacity: idx === 0 ? 1 : 0.5 }}>{formatStars(item.stars || "")}★</span>
         </div>
       ))}
     </div>
@@ -779,7 +779,7 @@ const Greeting: Variant = (p) => (
     <div className="absolute inset-3 rounded-[1.5rem] border border-[#d4b978] pointer-events-none" />
     <div className="text-[9px] font-black tracking-[0.4em] uppercase text-[#b3984f] mt-2">With Compliments</div>
     <div className="flex-1 flex flex-col items-center justify-center text-center">
-      <div className="text-[38px] font-black" style={{ fontFamily: "Georgia, serif" }}>今日之星</div>
+      <div className="text-[38px] font-black" style={{ fontFamily: "Georgia, serif" }}>{L(p.lang, "今日之星", "Star of the Day")}</div>
       <div className="mt-3 w-10 h-[2px] bg-[#d4b978]" />
       <div className="text-[20px] font-black mt-4" style={{ fontFamily: "Georgia, serif" }}>{p.trendingData[0]?.title.split("/")[1] || ""}</div>
       <div className="font-mono text-[9px] opacity-70 mt-1">{formatStars(p.trendingData[0]?.stars || "")} stars · +{p.trendingData[0]?.starsToday || "0"} today</div>
@@ -799,7 +799,7 @@ const Infographic: Variant = (p) => {
     <div {...base(p, "px-[8%] py-[7%]", { backgroundColor: "#ffffff", color: "#18181b" })}>
       <div className="flex justify-between items-center">
         <span className="font-mono text-[9px] tracking-[0.25em] uppercase opacity-50">GitHub Trending · {p.displayDate.slice(5)}</span>
-        <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[9px] font-bold">▲ 今日新增</span>
+        <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[9px] font-bold">▲ {L(p.lang, "今日新增", "New Today")}</span>
       </div>
       <div className="mt-4 grid grid-cols-3 gap-2 text-center">
         <div className="rounded-xl bg-zinc-50 border border-zinc-200 p-3"><div className="text-xl font-black">{p.trendingData.length}</div><div className="text-[8px] uppercase opacity-50 mt-1">Projects</div></div>
@@ -854,7 +854,7 @@ const Pornhub: Variant = (p) => (
       </div>
     </div>
     <div className="px-4 py-3 border-t border-white/10">
-      <div className="text-[9px] font-black uppercase tracking-widest text-zinc-500 mb-2">Related · 相关推荐</div>
+      <div className="text-[9px] font-black uppercase tracking-widest text-zinc-500 mb-2">Related · {L(p.lang, "相关推荐", "Recommendations")}</div>
       <div className="space-y-1.5">
         {p.trendingData.slice(0, 3).map((item, idx) => (
           <div key={item.id || idx} className="flex items-center gap-2 text-[10px]">
@@ -870,15 +870,15 @@ const Pornhub: Variant = (p) => (
 const XPost: Variant = (p) => (
   <div {...base(p, "", { backgroundColor: "#ffffff", color: "#0f1419" })}>
     <div className="px-4 pt-4 flex items-center gap-3">
-      <img src="/my-avatar.jpg" alt="author" crossOrigin="anonymous" className="w-11 h-11 rounded-full object-cover" referrerPolicy="no-referrer" />
+      <img src={p.authorAvatar} alt="author" crossOrigin="anonymous" className="w-11 h-11 rounded-full object-cover" referrerPolicy="no-referrer" />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1 text-[13px] font-black truncate">{p.authorName} <BadgeCheck className="w-4 h-4 text-[#1d9bf0]" /></div>
-        <div className="text-[11px] text-zinc-500">@{p.authorName} · 现在</div>
+        <div className="text-[11px] text-zinc-500">@{p.authorName} · {L(p.lang, "现在", "now")}</div>
       </div>
       <span className="text-zinc-400 text-lg">⋯</span>
     </div>
     <div className="px-4 py-3 flex-1 min-h-0 overflow-hidden">
-      <p className="text-[13px] leading-relaxed flex items-center gap-1">今日 GitHub 爆火项目 Top{p.trendingData.length} <Flame className="w-4 h-4" /></p>
+      <p className="text-[13px] leading-relaxed flex items-center gap-1">{L(p.lang, "今日 GitHub 爆火项目", "Hottest GitHub projects today")} Top{p.trendingData.length} <Flame className="w-4 h-4" /></p>
       <div className="mt-2.5 space-y-1.5 font-mono text-[10px]">
         {p.trendingData.slice(0, 15).map((item, idx) => (
           <div key={item.id || idx} className="flex gap-2">
@@ -905,7 +905,7 @@ const Telegram: Variant = (p) => (
       <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#2aabee]"><Send className="w-4 h-4" /></div>
       <div className="flex-1">
         <div className="text-[12px] font-bold leading-none">GitHub Trending</div>
-        <div className="text-[8px] opacity-80 mt-0.5">{p.trendingData.length} 条推送 · 刚刚</div>
+        <div className="text-[8px] opacity-80 mt-0.5">{p.trendingData.length} {L(p.lang, "条推送", "updates")} · {L(p.lang, "刚刚", "just now")}</div>
       </div>
       <span className="text-lg">⋯</span>
     </div>
@@ -920,7 +920,7 @@ const Telegram: Variant = (p) => (
       ))}
     </div>
     <div className="px-3 py-2.5 bg-white flex items-center gap-2">
-      <div className="flex-1 rounded-full bg-[#e7ebf0] px-3 py-1.5 text-[10px] text-zinc-500">消息</div>
+      <div className="flex-1 rounded-full bg-[#e7ebf0] px-3 py-1.5 text-[10px] text-zinc-500">{L(p.lang, "消息", "Messages")}</div>
       <div className="w-7 h-7 rounded-full bg-[#2aabee] flex items-center justify-center text-white"><Send className="w-3.5 h-3.5" /></div>
     </div>
   </div>
@@ -930,23 +930,23 @@ const Instagram: Variant = (p) => (
   <div {...base(p, "", { backgroundColor: "#ffffff", color: "#262626" })}>
     <div className="flex items-center gap-2.5 px-3 py-2.5">
       <div className="w-8 h-8 rounded-full p-[2px] bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600">
-        <img src="/my-avatar.jpg" alt="author" crossOrigin="anonymous" className="w-full h-full rounded-full object-cover" referrerPolicy="no-referrer" />
+        <img src={p.authorAvatar} alt="author" crossOrigin="anonymous" className="w-full h-full rounded-full object-cover" referrerPolicy="no-referrer" />
       </div>
       <div className="flex-1 text-[12px] font-bold truncate">{p.authorName}</div>
       <span className="text-lg text-zinc-500">⋯</span>
     </div>
     <div className="flex-1 flex items-center justify-center px-6 text-white" style={{ background: "linear-gradient(135deg, #405de6, #833ab4, #fd1d1d)" }}>
       <div className="text-center">
-        <div className="text-[24px] font-black leading-tight">今日 GitHub<br />爆火 Top{p.trendingData.length}</div>
+        <div className="text-[24px] font-black leading-tight">{L(p.lang, "今日 GitHub", "GitHub Trending")}<br />{L(p.lang, "爆火", "Hottest")} Top{p.trendingData.length}</div>
         <div className="text-[10px] opacity-80 mt-2">{p.trendingData.slice(0, 3).map((i) => i.title.split("/")[1]).join(" · ")} …</div>
       </div>
     </div>
     <div className="px-3 py-2.5">
       <div className="flex gap-3 text-xl"><Heart className="w-5 h-5 text-[#fd1d1d]" /><MessageCircle className="w-5 h-5" /><Send className="w-5 h-5" /><Bookmark className="w-5 h-5 ml-auto" /></div>
-      <div className="text-[11px] font-bold mt-1.5">{p.trendingData.reduce((s, i) => s + (parseInt(String(i.starsToday).replace(/,/g, ""), 10) || 0), 0).toLocaleString()} 次赞</div>
-      <div className="text-[10px] mt-0.5 flex items-center gap-1">今日 Top{p.trendingData.length} 榜单更新啦 <Rocket className="w-3.5 h-3.5" /></div>
-      <div className="text-[10px] text-[#00376b] mt-0.5">#GitHub #Trending #开源 #开发者</div>
-      <div className="text-[9px] text-zinc-400 mt-1">{p.timeText} · 查看全部 {p.trendingData.length} 条评论</div>
+      <div className="text-[11px] font-bold mt-1.5">{p.trendingData.reduce((s, i) => s + (parseInt(String(i.starsToday).replace(/,/g, ""), 10) || 0), 0).toLocaleString()} {L(p.lang, "次赞", "likes")}</div>
+      <div className="text-[10px] mt-0.5 flex items-center gap-1">{L(p.lang, "今日", "Today")} Top{p.trendingData.length} {L(p.lang, "榜单更新啦", "ranking updated!")} <Rocket className="w-3.5 h-3.5" /></div>
+      <div className="text-[10px] text-[#00376b] mt-0.5">#GitHub #Trending {L(p.lang, "#开源 #开发者", "#OpenSource #Developer")}</div>
+      <div className="text-[9px] text-zinc-400 mt-1">{p.timeText} · {L(p.lang, "查看全部", "View all")} {p.trendingData.length} {L(p.lang, "条评论", "comments")}</div>
     </div>
   </div>
 );
@@ -957,22 +957,22 @@ const Onlyfans: Variant = (p) => (
       <div className="w-12 h-12 rounded-full bg-[#0095f2] flex items-center justify-center text-xl font-black italic">G</div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1 text-[14px] font-black truncate">@{p.authorName} <BadgeCheck className="w-4 h-4 text-[#0095f2]" /></div>
-        <div className="text-[10px] text-zinc-500">{p.trendingData.length} 个开源项目 · 每日更新</div>
+        <div className="text-[10px] text-zinc-500">{p.trendingData.length} {L(p.lang, "个开源项目", "open-source projects")} · {L(p.lang, "每日更新", "updated daily")}</div>
       </div>
     </div>
     <div className="px-4 mt-4">
       <div className="rounded-xl border border-[#0095f2]/40 bg-[#0095f2]/10 p-3.5">
         <div className="flex justify-between items-center gap-3">
           <div>
-            <div className="text-[11px] font-black">GitHub 每日热榜</div>
-            <div className="text-[9px] text-zinc-400 mt-0.5">免费订阅 · 每日 {p.timeText} 更新</div>
+            <div className="text-[11px] font-black">{L(p.lang, "GitHub 每日热榜", "GitHub Daily Trending")}</div>
+            <div className="text-[9px] text-zinc-400 mt-0.5">{L(p.lang, "免费订阅", "Free subscription")} · {L(p.lang, "每日", "daily")} {p.timeText} {L(p.lang, "更新", "updates")}</div>
           </div>
           <span className="px-3 py-1.5 rounded-lg bg-[#0095f2] text-[10px] font-black shrink-0">SUBSCRIBE</span>
         </div>
       </div>
     </div>
     <div className="px-4 mt-4 flex-1 min-h-0 overflow-hidden">
-      <div className="text-[9px] font-black uppercase tracking-widest text-zinc-500 mb-2">近期热门</div>
+      <div className="text-[9px] font-black uppercase tracking-widest text-zinc-500 mb-2">{L(p.lang, "近期热门", "Trending Now")}</div>
       <div className="space-y-2">
         {p.trendingData.slice(0, 4).map((item, idx) => (
           <div key={item.id || idx} className="flex items-center gap-2.5 rounded-lg bg-white/[0.04] border border-white/10 p-2.5">
@@ -1019,7 +1019,7 @@ const Ios: Variant = (p) => (
       <div className="w-full h-full rounded-[1.75rem] bg-white/10 backdrop-blur-md border border-white/20 p-4 flex flex-col shadow-lg">
         <div className="flex items-center justify-between mb-2.5">
           <div className="flex items-center gap-2">
-            <img src="/my-avatar.jpg" alt="author" crossOrigin="anonymous" className="w-6 h-6 rounded-md object-cover" referrerPolicy="no-referrer" />
+            <img src={p.authorAvatar} alt="author" crossOrigin="anonymous" className="w-6 h-6 rounded-md object-cover" referrerPolicy="no-referrer" />
             <span className="text-[11px] font-bold opacity-90">GitHub Trending</span>
           </div>
           <span className="text-[9px] font-mono opacity-60">Top {Math.min(p.trendingData.length, 10)}</span>

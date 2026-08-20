@@ -27,17 +27,31 @@ export default function App() {
         setTheme={logic.setTheme}
         authorName={logic.authorName}
         setAuthorName={logic.setAuthorName}
+        authorAvatar={logic.authorAvatar}
+        setAuthorAvatar={logic.setAuthorAvatar}
+        youtubeName={logic.youtubeName}
+        setYoutubeName={logic.setYoutubeName}
+        youtubeAvatar={logic.youtubeAvatar}
+        setYoutubeAvatar={logic.setYoutubeAvatar}
+        platform={logic.platform}
+        selectPlatform={logic.selectPlatform}
+        selectedBgm={logic.selectedBgm}
+        setSelectedBgm={logic.setSelectedBgm}
+        previewLang={logic.previewLang}
+        togglePreviewLang={logic.togglePreviewLang}
         selectedDate={logic.selectedDate}
         setSelectedDate={logic.setSelectedDate}
         globalSummary={logic.globalSummary}
         globalHashtags={logic.globalHashtags}
         platformStatus={logic.platformStatus}
-        trendingData={logic.trendingData}
+        trendingData={logic.displayTrending}
         currentIndex={logic.currentIndex}
         fetchTrending={logic.fetchTrending}
         loadCache={logic.loadCache}
         loginPlatform={logic.loginPlatform}
         publishToPlatform={logic.publishToPlatform}
+        exportYoutubeVideo={logic.exportYoutubeVideo}
+        copyYoutubeCopy={logic.copyYoutubeCopy}
         exportImage={logic.exportImage}
         applyProject={logic.applyProject}
         setStatusMsg={logic.setStatusMsg}
@@ -50,7 +64,10 @@ export default function App() {
         theme={logic.theme}
         displayDate={logic.displayDate}
         timeText={logic.timeText}
-        authorName={logic.authorName}
+        authorName={logic.activeAuthorName}
+        authorAvatar={logic.activeAuthorAvatar}
+        lang={logic.previewLang}
+        platform={logic.platform}
         globalSummary={logic.globalSummary}
         globalHashtags={logic.globalHashtags}
         trendingData={logic.trendingData}
@@ -68,6 +85,7 @@ export default function App() {
         processProgress={logic.processProgress}
         previewRef={logic.previewRef}
         setStatusMsg={logic.setStatusMsg}
+        applyProject={logic.applyProject}
       />
 
       {/* Global Scrollbar Styles */}

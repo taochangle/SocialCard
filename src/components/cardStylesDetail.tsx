@@ -1,7 +1,7 @@
 import React from "react";
 import { Bot, Flame, Send, Lock, BadgeCheck, Play, Heart, MessageCircle, Repeat2, BarChart2, Bookmark } from "lucide-react";
 import { CardStyle } from "../types";
-import { DetailStyleProps, formatStars } from "./cardStyleProps";
+import { DetailStyleProps, formatStars, L } from "./cardStyleProps";
 
 type Variant = React.FC<DetailStyleProps>;
 
@@ -24,7 +24,7 @@ const Summary = ({ p, className = "", style }: { p: DetailStyleProps; className?
 );
 
 const base = (p: DetailStyleProps, cls = "", extra?: React.CSSProperties) => ({
-  className: `w-full h-full rounded-2xl relative overflow-hidden flex flex-col ${cls}`,
+  className: `w-full h-full relative overflow-hidden flex flex-col ${p.fullBleed ? "" : "rounded-2xl"} ${cls}`,
   style: { backgroundColor: p.theme.cardBg, color: p.theme.textColor, ...extra },
 });
 
@@ -98,9 +98,9 @@ const Poster: Variant = (p) => (
 const Terminal: Variant = (p) => (
   <div {...base(p, "font-mono")}>
     <div className="flex items-center gap-1.5 px-4 py-3 bg-white/[0.06] border-b border-white/10">
-      <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
-      <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
-      <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
+      <span className="w-3.5 h-3.5 rounded-full bg-[#ff5f56]" />
+      <span className="w-3.5 h-3.5 rounded-full bg-[#ffbd2e]" />
+      <span className="w-3.5 h-3.5 rounded-full bg-[#27c93f]" />
       <span className="ml-3 text-[12px] opacity-50">MoneyPrinterTurbo — bash</span>
     </div>
     <div className="flex-1 px-5 py-4 flex flex-col gap-2 overflow-hidden">
@@ -165,7 +165,7 @@ const Databar: Variant = (p) => {
       <div className="my-5">
         <div className="flex justify-between text-[13px] font-bold mb-1.5"><span>Total Stars</span><span className="font-mono">{formatStars(p.stars)}</span></div>
         <div className="h-[10px] rounded-full bg-zinc-100"><div className="h-full rounded-full" style={{ width: `${Math.min(total / 500, 1) * 100}%`, backgroundColor: p.theme.accentColor }} /></div>
-        <div className="flex justify-between text-[13px] font-bold mt-4 mb-1.5"><span>今日新增</span><span className="font-mono" style={{ color: p.theme.accentColor }}>+{formatStars(p.starsToday)}</span></div>
+        <div className="flex justify-between text-[13px] font-bold mt-4 mb-1.5"><span>{L(p.lang, "今日新增", "New Today")}</span><span className="font-mono" style={{ color: p.theme.accentColor }}>+{formatStars(p.starsToday)}</span></div>
         <div className="h-[10px] rounded-full bg-zinc-100"><div className="h-full rounded-full" style={{ width: `${Math.min((today / 2400) * 100, 100)}%`, backgroundColor: p.theme.accentColor }} /></div>
       </div>
       <div className="flex-1 min-h-0 overflow-hidden rounded-xl bg-zinc-50 border border-zinc-200 p-4">
@@ -242,13 +242,13 @@ const Chat: Variant = (p) => (
       <div className="w-9 h-9 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-sm"><Bot className="w-4 h-4" /></div>
       <div className="flex-1">
         <div className="text-[13px] font-black leading-none">Trending Bot</div>
-        <div className="text-[9px] text-emerald-400 mt-1">● AI 在线</div>
+        <div className="text-[9px] text-emerald-400 mt-1">● AI {L(p.lang, "在线", "Online")}</div>
       </div>
       <span className="text-[9px] font-mono text-zinc-500">AI</span>
     </div>
     <div className="flex-1 flex flex-col gap-3 px-4 py-4 overflow-hidden">
       <div className="self-end max-w-[75%] rounded-2xl rounded-br-sm bg-cyan-500/20 border border-cyan-400/30 px-3 py-2">
-        <div className="text-[11px]">今天什么项目最火？</div>
+        <div className="text-[11px]">{L(p.lang, "今天什么项目最火？", "What's the hottest project today?")}</div>
       </div>
       <div className="flex gap-2 items-end">
         <div className="w-6 h-6 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-[9px]"><Bot className="w-3 h-3" /></div>
@@ -264,7 +264,7 @@ const Chat: Variant = (p) => (
       <div className="flex gap-2 items-end">
         <div className="w-6 h-6 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-[9px]"><Bot className="w-3 h-3" /></div>
         <div className="max-w-[85%] rounded-2xl rounded-bl-sm bg-white/10 border border-white/10 px-3 py-2">
-          <div className="text-[9px] text-zinc-400 mb-1.5">相关话题</div>
+          <div className="text-[9px] text-zinc-400 mb-1.5">{L(p.lang, "相关话题", "Related Topics")}</div>
           <div className="flex flex-wrap gap-1.5">
             {p.keywordList.slice(0, 6).map((tag, i) => (
               <span key={i} className="px-2 py-0.5 rounded-full bg-white/10 text-[9px]">#{tag}</span>
@@ -274,7 +274,7 @@ const Chat: Variant = (p) => (
       </div>
     </div>
     <div className="px-4 py-3 border-t border-white/10 flex items-center gap-2">
-      <div className="flex-1 rounded-full bg-white/10 border border-white/10 px-4 py-2 text-[10px] text-zinc-500">输入消息…</div>
+      <div className="flex-1 rounded-full bg-white/10 border border-white/10 px-4 py-2 text-[10px] text-zinc-500">{L(p.lang, "输入消息…", "Type a message…")}</div>
       <div className="w-8 h-8 rounded-full bg-cyan-500 flex items-center justify-center text-sm"><Send className="w-4 h-4" /></div>
     </div>
   </div>
@@ -361,7 +361,7 @@ const Notebook: Variant = (p) => (
     <div className="flex flex-wrap gap-2 mt-4">
       <span className="w-14 h-14 rounded-full bg-amber-200 flex flex-col items-center justify-center text-[9px] font-bold -rotate-3">{formatStars(p.stars)}<br />stars</span>
       <span className="w-14 h-14 rounded-full bg-emerald-200 flex flex-col items-center justify-center text-[9px] font-bold rotate-3">+{formatStars(p.starsToday)}<br />today</span>
-      <span className="px-3 py-1.5 rounded-lg bg-white border border-[#3a332b]/20 text-[10px] font-bold self-center">#{p.keywordList[0] || "开源"}</span>
+      <span className="px-3 py-1.5 rounded-lg bg-white border border-[#3a332b]/20 text-[10px] font-bold self-center">#{p.keywordList[0] || L(p.lang, "开源", "Open Source")}</span>
     </div>
   </div>
 );
@@ -614,7 +614,7 @@ const Notify: Variant = (p) => (
         <img {...avatarFor(p.projectName, p.avatarUrl)} className="w-10 h-10 rounded-full object-cover" />
         <div className="min-w-0">
           <div className="text-[11px] font-bold truncate">{p.projectName.split("/")[0]}</div>
-          <div className="text-[9px] text-zinc-400 truncate">{p.projectName.split("/")[1] || p.projectName} · 刚刚</div>
+          <div className="text-[9px] text-zinc-400 truncate">{p.projectName.split("/")[1] || p.projectName} · {L(p.lang, "刚刚", "just now")}</div>
         </div>
       </div>
       <h2 className="text-lg font-black mt-3 shrink-0">{p.projectName.split("/")[1] || p.projectName}</h2>
@@ -631,7 +631,7 @@ const Notify: Variant = (p) => (
         ))}
       </div>
     </div>
-    <div className="text-center text-[9px] text-zinc-500 font-mono pt-2">@xintao · 查看全部</div>
+    <div className="text-center text-[9px] text-zinc-500 font-mono pt-2">@{p.authorName} · {L(p.lang, "查看全部", "View all")}</div>
   </div>
 );
 
@@ -688,7 +688,7 @@ const Cyber: Variant = (p) => (
     <span className="absolute top-3 right-3 w-6 h-6 border-t-2 border-r-2 border-fuchsia-400" />
     <span className="absolute bottom-3 left-3 w-6 h-6 border-b-2 border-l-2 border-fuchsia-400" />
     <span className="absolute bottom-3 right-3 w-6 h-6 border-b-2 border-r-2 border-cyan-400" />
-    <div className="relative font-mono text-[9px] tracking-[0.25em] uppercase text-cyan-300/80">Target #{String(p.currentIndex + 1).padStart(2, "0")} · 锁定</div>
+    <div className="relative font-mono text-[9px] tracking-[0.25em] uppercase text-cyan-300/80">Target #{String(p.currentIndex + 1).padStart(2, "0")} · {L(p.lang, "锁定", "LOCKED")}</div>
     <h2 className="relative mt-2 text-[24px] font-black leading-tight break-all [text-shadow:0_0_16px_rgba(34,211,238,0.5)]">{p.projectName.split("/")[1] || p.projectName}</h2>
     <div className="relative font-mono text-[9px] opacity-60 mt-1">{p.projectUrl.split("/")[0]} · {formatStars(p.stars)}★ · +{formatStars(p.starsToday)}</div>
     <div className="relative flex-1 min-h-0 overflow-hidden mt-4 border border-cyan-400/30 bg-cyan-400/5 p-3.5">
@@ -789,7 +789,7 @@ const Infographic: Variant = (p) => {
       <div className="mt-4 grid grid-cols-3 gap-2 text-center">
         <div className="rounded-xl bg-zinc-50 border border-zinc-200 p-2.5"><div className="text-base font-black">{formatStars(p.stars)}</div><div className="text-[7px] uppercase opacity-50 mt-0.5">Stars</div></div>
         <div className="rounded-xl bg-zinc-50 border border-zinc-200 p-2.5"><div className="text-base font-black text-emerald-600">+{formatStars(p.starsToday)}</div><div className="text-[7px] uppercase opacity-50 mt-0.5">Today</div></div>
-        <div className="rounded-xl bg-zinc-50 border border-zinc-200 p-2.5"><div className="text-base font-black">{Math.round((today / Math.max(total, 1)) * 10000) / 100}%</div><div className="text-[7px] uppercase opacity-50 mt-0.5">增长</div></div>
+        <div className="rounded-xl bg-zinc-50 border border-zinc-200 p-2.5"><div className="text-base font-black">{Math.round((today / Math.max(total, 1)) * 10000) / 100}%</div><div className="text-[7px] uppercase opacity-50 mt-0.5">{L(p.lang, "增长", "Growth")}</div></div>
       </div>
       <div className="flex-1 min-h-0 overflow-hidden mt-4">
         <Summary p={p} className="text-[12px] leading-relaxed line-clamp-[11]" />
@@ -820,7 +820,7 @@ const Pornhub: Variant = (p) => (
       <div className="relative text-center px-6">
         <div className="text-[22px] font-black leading-tight text-orange-500">{p.projectName.split("/")[1] || p.projectName}</div>
         <Summary p={p} className="text-[11px] text-zinc-300 mt-1.5 line-clamp-2" />
-        <div className="text-[10px] text-orange-400 font-mono mt-1.5">★ {formatStars(p.stars)} · 今日 +{formatStars(p.starsToday)}</div>
+        <div className="text-[10px] text-orange-400 font-mono mt-1.5">★ {formatStars(p.stars)} · {L(p.lang, "今日", "Today")} +{formatStars(p.starsToday)}</div>
       </div>
       <div className="absolute bottom-0 inset-x-0 px-4 pb-3">
         <div className="flex justify-between text-[10px] mb-1">
@@ -847,13 +847,13 @@ const XPost: Variant = (p) => (
       <img {...avatarFor(p.projectName, p.avatarUrl)} className="w-10 h-10 rounded-full object-cover" />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1 text-[12px] font-black truncate">{p.projectName.split("/")[0]} <BadgeCheck className="w-4 h-4 text-[#1d9bf0]" /></div>
-        <div className="text-[10px] text-zinc-500">@{p.projectName.split("/")[0]} · 刚刚</div>
+        <div className="text-[10px] text-zinc-500">@{p.projectName.split("/")[0]} · {L(p.lang, "刚刚", "just now")}</div>
       </div>
     </div>
-    <div className="px-4 py-2 text-[11px] text-zinc-500">回复 @{p.authorName}</div>
+    <div className="px-4 py-2 text-[11px] text-zinc-500">{L(p.lang, "回复", "Reply")} @{p.authorName}</div>
     <div className="px-4 flex-1 min-h-0 overflow-hidden">
       <p className="text-[13px] leading-relaxed">
-        榜单 #{p.currentIndex + 1} · <span className="font-black">{p.projectName.split("/")[1] || p.projectName}</span> 🧵
+        {L(p.lang, "榜单", "Thread")} #{p.currentIndex + 1} · <span className="font-black">{p.projectName.split("/")[1] || p.projectName}</span>
       </p>
       <Summary p={p} className="text-[11px] leading-relaxed text-zinc-600 mt-1.5 line-clamp-[11]" />
       <div className="mt-3 flex gap-2">
@@ -878,12 +878,12 @@ const Telegram: Variant = (p) => (
       <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#2aabee]"><Send className="w-4 h-4" /></div>
       <div className="flex-1">
         <div className="text-[12px] font-bold leading-none">GitHub Trending</div>
-        <div className="text-[8px] opacity-80 mt-0.5">在线</div>
+        <div className="text-[8px] opacity-80 mt-0.5">{L(p.lang, "在线", "Online")}</div>
       </div>
     </div>
     <div className="flex-1 px-3 py-3 flex flex-col gap-2 overflow-hidden">
       <div className="self-end max-w-[80%] rounded-xl rounded-tr-sm bg-[#effdde] px-3 py-2 shadow-sm">
-        <div className="text-[11px]">今天什么项目最火？</div>
+        <div className="text-[11px]">{L(p.lang, "今天什么项目最火？", "What's the hottest project today?")}</div>
       </div>
       <div className="max-w-[88%] rounded-xl rounded-tl-sm bg-white px-3 py-2.5 shadow-sm">
         <div className="text-[10px] font-bold text-[#2aabee]">GitHub Trending</div>
@@ -902,7 +902,7 @@ const Telegram: Variant = (p) => (
       <div className="self-center text-[9px] text-zinc-400">{p.timeText}</div>
     </div>
     <div className="px-3 py-2.5 bg-white flex items-center gap-2">
-      <div className="flex-1 rounded-full bg-[#e7ebf0] px-3 py-1.5 text-[10px] text-zinc-500">消息</div>
+      <div className="flex-1 rounded-full bg-[#e7ebf0] px-3 py-1.5 text-[10px] text-zinc-500">{L(p.lang, "消息", "Messages")}</div>
       <div className="w-7 h-7 rounded-full bg-[#2aabee] flex items-center justify-center text-white"><Send className="w-3.5 h-3.5" /></div>
     </div>
   </div>
@@ -925,7 +925,7 @@ const Instagram: Variant = (p) => (
     </div>
     <div className="px-3 py-2.5">
       <div className="flex gap-3 text-xl"><Heart className="w-5 h-5 text-[#fd1d1d]" /><MessageCircle className="w-5 h-5" /><Send className="w-5 h-5" /><Bookmark className="w-5 h-5 ml-auto" /></div>
-      <div className="text-[11px] font-bold mt-1.5">{(parseInt(String(p.starsToday).replace(/,/g, ""), 10) || 0).toLocaleString()} 次赞</div>
+      <div className="text-[11px] font-bold mt-1.5">{(parseInt(String(p.starsToday).replace(/,/g, ""), 10) || 0).toLocaleString()} {L(p.lang, "次赞", "likes")}</div>
       <div className="text-[10px] mt-0.5"><Summary p={p} className="inline text-[10px] leading-relaxed" /></div>
       <div className="text-[10px] text-[#00376b] mt-0.5">
         {p.keywordList.slice(0, 5).map((t) => `#${t}`).join(" ")}
@@ -939,22 +939,22 @@ const Onlyfans: Variant = (p) => (
   <div {...base(p, "", { backgroundColor: "#0d1017", color: "#ffffff" })}>
     <div className="px-4 pt-4 flex items-center justify-between">
       <span className="font-black italic text-[16px] text-[#0095f2]">GitHub Trending</span>
-      <span className="text-[10px] text-zinc-500">订阅内容</span>
+      <span className="text-[10px] text-zinc-500">{L(p.lang, "订阅内容", "Subscriptions")}</span>
     </div>
     <div className="relative flex-1 mx-4 mt-3 rounded-xl overflow-hidden border border-white/10">
       <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, #0b3a5e, #0d1017)" }} />
       <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
         <img className="w-12 h-12 rounded-full object-cover mb-3" {...avatarFor(p.projectName, p.avatarUrl)} />
         <div className="text-[18px] font-black">{p.projectName.split("/")[1] || p.projectName}</div>
-        <div className="text-[10px] text-zinc-400 mt-1">AI 一键生成爆款视频 · +{formatStars(p.starsToday)}★</div>
+        <div className="text-[10px] text-zinc-400 mt-1">{L(p.lang, "AI 一键生成爆款视频", "AI Viral Video Generator")} · +{formatStars(p.starsToday)}★</div>
       </div>
-      <div className="absolute top-2 right-2 px-2 py-1 rounded bg-black/50 text-[9px] font-black text-[#0095f2] border border-[#0095f2]/50 flex items-center gap-1"><Lock className="w-3 h-3" /> 免费解锁</div>
+      <div className="absolute top-2 right-2 px-2 py-1 rounded bg-black/50 text-[9px] font-black text-[#0095f2] border border-[#0095f2]/50 flex items-center gap-1"><Lock className="w-3 h-3" /> {L(p.lang, "免费解锁", "Unlock Free")}</div>
     </div>
     <div className="px-4 py-3.5">
       <div className="flex items-center justify-between rounded-xl border border-[#0095f2]/40 bg-[#0095f2]/10 px-3.5 py-2.5 gap-3">
         <div className="min-w-0">
           <div className="text-[11px] font-black">
-            榜单 #{p.currentIndex + 1} · {["深度分析", "榜单速报", "爆款拆解", "趋势解读", "精华盘点"][p.currentIndex % 5]}
+            {L(p.lang, "榜单", "Thread")} #{p.currentIndex + 1} · {(p.lang === "en" ? ["Deep Dive", "Daily Brief", "Hit Breakdown", "Trend Analysis", "Highlights"] : ["深度分析", "榜单速报", "爆款拆解", "趋势解读", "精华盘点"])[p.currentIndex % 5]}
           </div>
           <div className="text-[9px] text-zinc-400 mt-0.5 truncate">★ {formatStars(p.stars)} · +{formatStars(p.starsToday)} · {p.keywordList.slice(0, 3).map((t) => `#${t}`).join(" ")}</div>
         </div>
@@ -990,7 +990,7 @@ const Ios: Variant = (p) => (
               {p.projectName.split("/")[1] || p.projectName} <Flame className="w-3 h-3" />
             </div>
             <div className="text-[9px] leading-snug opacity-80 mt-0.5 line-clamp-2">
-              {p.keywordList.slice(0, 3).join(" · ")} · 今日 +{formatStars(p.starsToday)} 星
+              {p.keywordList.slice(0, 3).join(" · ")} · {L(p.lang, "今日", "Today")} +{formatStars(p.starsToday)} {L(p.lang, "星", "stars")}
             </div>
           </div>
         </div>

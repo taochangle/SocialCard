@@ -23,6 +23,8 @@ export interface RankingItem {
   url?: string;
   aiSummary?: string;
   aiKeywords?: string;
+  aiSummaryEn?: string;
+  aiKeywordsEn?: string;
   avatarUrl?: string;
 }
 

@@ -12,6 +12,9 @@ interface PreviewPanelProps {
   displayDate: string;
   timeText: string;
   authorName: string;
+  authorAvatar: string;
+  lang: "zh" | "en";
+  platform: "douyin" | "youtube";
   globalSummary: string;
   globalHashtags: string;
   trendingData: RankingItem[];
@@ -39,6 +42,9 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({
   displayDate,
   timeText,
   authorName,
+  authorAvatar,
+  lang,
+  platform,
   globalSummary,
   globalHashtags,
   trendingData,
@@ -58,6 +64,39 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({
   setStatusMsg,
   applyProject,
 }) => {
+  const cardEl =
+    layoutMode === "detail" ? (
+      <DetailCard
+        style={cardStyle}
+        theme={theme}
+        displayDate={displayDate}
+        timeText={timeText}
+        authorName={authorName}
+        projectName={projectName}
+        projectUrl={projectUrl}
+        stars={stars}
+        starsToday={starsToday}
+        currentIndex={currentIndex}
+        highlightedHtml={highlightedHtml}
+        keywordList={keywordList}
+        avatarUrl={avatarUrl}
+        lang={lang}
+        fullBleed={platform === "youtube"}
+      />
+    ) : (
+      <IndexCard
+        style={cardStyle}
+        theme={theme}
+        displayDate={displayDate}
+        timeText={timeText}
+        authorName={authorName}
+        authorAvatar={authorAvatar}
+        lang={lang}
+        fullBleed={platform === "youtube"}
+        trendingData={trendingData}
+      />
+    );
+
   return (
     <main className="flex-1 bg-[#0c0c0e] flex items-center justify-center p-6 sm:p-12 overflow-auto relative">
       {/* 轮播按钮 (左右两侧) */}
@@ -91,7 +130,7 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({
       </div>
 
       <div className="w-full max-w-2xl flex flex-col items-center relative z-10">
-        {/* 9:16 外壳：中间保留原 3:4 卡片，上下未覆盖区域用蒙版填充 */}
+        {/* 9:16 外壳：抖音 = 3:4 卡片 + 上下蒙版；YouTube = 真 9:16 全屏 */}
         <div
           ref={previewRef}
           className="w-full aspect-[9/16] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] overflow-hidden relative flex flex-col"
@@ -100,56 +139,38 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({
             maxWidth: "calc(85vh * 9 / 16)",
           }}
         >
-          {/* 顶部蒙版：背景色 + 遮罩 */}
-          <div className="relative flex-1 min-h-0 overflow-hidden">
-            <div
-              className="absolute inset-0"
-              style={{ background: getMaskGradient(theme.outerBg, "top") }}
-            />
-          </div>
-
-          {/* 中部 3:4 卡片（保持原样） */}
-          <div
-            className="relative shrink-0 w-full aspect-[3/4] overflow-hidden"
-            style={{ backgroundColor: theme.outerBg }}
-          >
-            <div className="absolute inset-0 flex items-center justify-center p-[7%]">
-              {layoutMode === "detail" ? (
-                <DetailCard
-                  style={cardStyle}
-                  theme={theme}
-                  displayDate={displayDate}
-                  timeText={timeText}
-                  authorName={authorName}
-                  projectName={projectName}
-                  projectUrl={projectUrl}
-                  stars={stars}
-                  starsToday={starsToday}
-                  currentIndex={currentIndex}
-                  highlightedHtml={highlightedHtml}
-                  keywordList={keywordList}
-                  avatarUrl={avatarUrl}
+          {platform === "youtube" ? (
+            /* YouTube：真 9:16，内容撑满整屏，无蒙版 */
+            <div className="relative flex-1 min-h-0 overflow-hidden">{cardEl}</div>
+          ) : (
+            <>
+              {/* 顶部蒙版：背景色 + 遮罩 */}
+              <div className="relative flex-1 min-h-0 overflow-hidden">
+                <div
+                  className="absolute inset-0"
+                  style={{ background: getMaskGradient(theme.outerBg, "top") }}
                 />
-              ) : (
-                <IndexCard
-                  style={cardStyle}
-                  theme={theme}
-                  displayDate={displayDate}
-                  timeText={timeText}
-                  authorName={authorName}
-                  trendingData={trendingData}
-                />
-              )}
-            </div>
-          </div>
+              </div>
 
-          {/* 底部蒙版：背景色 + 遮罩 */}
-          <div className="relative flex-1 min-h-0 overflow-hidden">
-            <div
-              className="absolute inset-0"
-              style={{ background: getMaskGradient(theme.outerBg, "bottom") }}
-            />
-          </div>
+              {/* 中部 3:4 卡片（保持原样） */}
+              <div
+                className="relative shrink-0 w-full aspect-[3/4] overflow-hidden"
+                style={{ backgroundColor: theme.outerBg }}
+              >
+                <div className="absolute inset-0 flex items-center justify-center p-[7%]">
+                  {cardEl}
+                </div>
+              </div>
+
+              {/* 底部蒙版：背景色 + 遮罩 */}
+              <div className="relative flex-1 min-h-0 overflow-hidden">
+                <div
+                  className="absolute inset-0"
+                  style={{ background: getMaskGradient(theme.outerBg, "bottom") }}
+                />
+              </div>
+            </>
+          )}
         </div>
 
         {/* 批量生成遮罩：避免渲染期间看到预览逐张切换 */}

@@ -42,21 +42,39 @@ export const aiService = {
     }
   },
 
-  async generateReadmeSummary(readmeText: string): Promise<{ summary: string, keywords: string }> {
-    const prompt = `请根据以下 GitHub 项目的 README 内容，生成一个极其精炼、吸引人的中文摘要和一组关键词。
+  async generateReadmeSummary(
+    readmeText: string,
+    lang: "zh" | "en" | "both" = "zh"
+  ): Promise<{ summary: string, keywords: string, summaryEn?: string, keywordsEn?: string }> {
+    const zhInstruction = `1. 摘要 (summary)：必须在 140 字以内，建议 80 字左右，专业且具有传播力。
+2. 关键词 (keywords)：必须是 **摘要内容中已经出现的词汇**，用逗号隔开。这些词将用于在前端高亮摘要，所以请务必确保它们完全匹配摘要中的字词。`;
+
+    const enInstruction = `1. English summary (summaryEn): concise and catchy, under 140 characters (target ~100), written in clear English for a global tech audience.
+2. English keywords (keywordsEn): comma-separated words that ALREADY appear in summaryEn. They are used for keyword highlighting, so they must exactly match words in summaryEn.`;
+
+    const langBlock =
+      lang === "en"
+        ? `Language: ONLY English. Return summaryEn and keywordsEn below.`
+        : lang === "both"
+          ? `Language: BOTH Chinese and English. Return all four fields below.`
+          : `Language: ONLY Chinese. Return summary and keywords below.`;
+
+    const prompt = `请根据以下 GitHub 项目的 README 内容，生成极其精炼、吸引人的摘要和关键词。
 
 要求：
-1. 摘要 (summary)：必须在 140 字以内，建议 80 字左右，专业且具有传播力。
-2. 关键词 (keywords)：必须是 **摘要内容中已经出现的词汇**，用逗号隔开。这些词将用于在前端高亮摘要，所以请务必确保它们完全匹配摘要中的字词。
-3. 语言：必须使用中文。
+${zhInstruction}
+${enInstruction}
+${langBlock}
 
 README 内容：
 ${readmeText.substring(0, 10000)}
 
 请以 JSON 格式返回：
 {
-  "summary": "这里是生成的中文摘要...",
-  "keywords": "关键词1,关键词2..."
+  "summary": "中文摘要（仅 zh/both 需要）",
+  "keywords": "关键词1,关键词2（仅 zh/both 需要）",
+  "summaryEn": "English summary (only for en/both)",
+  "keywordsEn": "keyword1,keyword2 (only for en/both)"
 }`;
 
     const data = await this.callAI(prompt);
@@ -64,23 +82,32 @@ ${readmeText.substring(0, 10000)}
     return {
       summary: data.summary || "",
       keywords: data.keywords || "",
+      summaryEn: data.summaryEn || "",
+      keywordsEn: data.keywordsEn || "",
     };
   },
 
-  async generateGlobalSummary(projects: any[]): Promise<{ summary: string, hashtags: string }> {
-    const contents = `你是一个资深的开源趋势观察员。请根据以下今日 GitHub Trending 的项目列表，生成一段极其精炼的“今日趋势大总结”以及 5 个用于社交媒体传播的 #话题。
+  async generateGlobalSummary(projects: any[], lang: "zh" | "en" = "zh"): Promise<{ summary: string, hashtags: string }> {
+    const isEn = lang === "en";
+    const contents = `${isEn
+      ? `You are a veteran open-source trend analyst. Based on today's GitHub Trending list below, write an extremely concise "Trending Today" summary and 5 hashtags for social media sharing.
+
+Rules:
+1. The summary must be PLAIN TEXT in English — absolutely no Markdown formatting (no #, *, **, [], > etc.).
+2. Hashtags should be 2-4 words each, camel-case friendly, e.g. #OpenSource, #AITools.`
+      : `你是一个资深的开源趋势观察员。请根据以下今日 GitHub Trending 的项目列表，生成一段极其精炼的“今日趋势大总结”以及 5 个用于社交媒体传播的 #话题。
 
 要求：
 1. 总结文字必须是纯文本，**绝对不要使用任何 Markdown 格式**（如 #, *, **, [ ], > 等）。
-2. 直接返回文字内容。
+2. 直接返回文字内容。`}
 
 项目列表：
-${projects.map((item: any) => `${item.title}: ${item.aiSummary || item.content}`).join("\n")}
+${projects.map((item: any) => `${item.title}: ${isEn ? item.aiSummaryEn || item.aiSummary || item.content : item.aiSummary || item.content}`).join("\n")}
 
 请以 JSON 格式返回，格式如下：
 {
-  "summary": "这里是今日趋势的深度总结文字...",
-  "hashtags": ["#话题1", "#话题2", "#话题3", "#话题4", "#话题5"]
+  "summary": "${isEn ? "Today's trending summary..." : "这里是今日趋势的深度总结文字..."}",
+  "hashtags": ["#tag1", "#tag2", "#tag3", "#tag4", "#tag5"]
 }`;
 
     const data = await this.callAI(contents);

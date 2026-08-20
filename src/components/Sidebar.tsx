@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   LayoutGrid,
   RefreshCw,
@@ -9,6 +9,9 @@ import {
   Download,
   Calendar,
   Image as ImageIcon,
+  Youtube,
+  Video,
+  Music,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { TEMPLATES, CARD_STYLES } from "../constants";
@@ -28,6 +31,18 @@ interface SidebarProps {
   setTheme: (theme: Theme) => void;
   authorName: string;
   setAuthorName: (name: string) => void;
+  authorAvatar: string;
+  setAuthorAvatar: (avatar: string) => void;
+  youtubeName: string;
+  setYoutubeName: (name: string) => void;
+  youtubeAvatar: string;
+  setYoutubeAvatar: (avatar: string) => void;
+  platform: "douyin" | "youtube";
+  selectPlatform: (platform: "douyin" | "youtube") => void;
+  selectedBgm: string;
+  setSelectedBgm: (bgm: string) => void;
+  previewLang: "zh" | "en";
+  togglePreviewLang: (lang: "zh" | "en") => void;
   selectedDate: string;
   setSelectedDate: (date: string) => void;
   globalSummary: string;
@@ -39,6 +54,8 @@ interface SidebarProps {
   loadCache: (date: string) => void;
   loginPlatform: (platform: string) => void;
   publishToPlatform: (platform: string) => void;
+  exportYoutubeVideo: () => void;
+  copyYoutubeCopy: () => void;
   exportImage: () => void;
   applyProject: (index: number) => void;
   setStatusMsg: (msg: string | null) => void;
@@ -59,6 +76,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
   setTheme,
   authorName,
   setAuthorName,
+  authorAvatar,
+  setAuthorAvatar,
+  youtubeName,
+  setYoutubeName,
+  youtubeAvatar,
+  setYoutubeAvatar,
+  platform,
+  selectPlatform,
+  selectedBgm,
+  setSelectedBgm,
+  previewLang,
+  togglePreviewLang,
   selectedDate,
   setSelectedDate,
   globalSummary,
@@ -70,12 +99,43 @@ export const Sidebar: React.FC<SidebarProps> = ({
   loadCache,
   loginPlatform,
   publishToPlatform,
+  exportYoutubeVideo,
+  copyYoutubeCopy,
   exportImage,
   applyProject,
   setStatusMsg,
   processStage,
 }) => {
   const dateInputRef = useRef<HTMLInputElement>(null);
+  const bgmAudioRef = useRef<HTMLAudioElement>(null);
+  const [bgmTracks, setBgmTracks] = useState<string[]>([]);
+  const [bgmPlaying, setBgmPlaying] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/bgm")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.tracks) setBgmTracks(d.tracks);
+      })
+      .catch(() => {});
+  }, []);
+
+  // 切换曲目时停止试听
+  useEffect(() => {
+    setBgmPlaying(false);
+    bgmAudioRef.current?.pause();
+  }, [selectedBgm]);
+
+  const toggleBgm = () => {
+    const audio = bgmAudioRef.current;
+    if (!audio || !selectedBgm) return;
+    if (bgmPlaying) {
+      audio.pause();
+      setBgmPlaying(false);
+    } else {
+      audio.play().then(() => setBgmPlaying(true)).catch(() => {});
+    }
+  };
 
   return (
     <aside className="w-full shrink-0 border-b border-white/10 bg-zinc-950/80 backdrop-blur lg:w-[360px] xl:w-[400px] lg:border-b-0 lg:border-r z-10 flex flex-col h-screen">
@@ -188,6 +248,80 @@ export const Sidebar: React.FC<SidebarProps> = ({
           )}
         </div>
 
+        {/* 目标平台 */}
+        <section className="mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <Youtube className="w-4 h-4 text-cyan-400" />
+            <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
+              目标平台
+            </h3>
+          </div>
+          <div className="flex p-1 bg-zinc-900 rounded-xl border border-white/5">
+            {[
+              { id: "douyin" as const, label: "抖音", desc: "拼接 9:16 · 中文" },
+              { id: "youtube" as const, label: "YouTube", desc: "真 9:16 · 英文" },
+            ].map((p) => (
+              <button
+                key={p.id}
+                onClick={() => selectPlatform(p.id)}
+                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
+                  platform === p.id
+                    ? "bg-zinc-800 text-white shadow-sm"
+                    : "text-zinc-500 hover:text-zinc-300"
+                }`}
+                title={p.desc}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* 背景音乐（仅 YouTube） */}
+        {platform === "youtube" && (
+          <section className="mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <Music className="w-4 h-4 text-cyan-400" />
+              <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
+                背景音乐
+              </h3>
+            </div>
+            <div className="flex gap-2">
+              <select
+                value={selectedBgm}
+                onChange={(e) => setSelectedBgm(e.target.value)}
+                className="flex-1 min-w-0 bg-zinc-900/50 border border-white/5 rounded-xl px-3 py-2.5 text-xs text-zinc-200 outline-none focus:border-cyan-400/40 transition-colors"
+              >
+                <option value="">无 BGM</option>
+                {bgmTracks.map((t) => (
+                  <option key={t} value={t}>
+                    {t.replace(/\.mp3$/, "").replace(/^\d+-/, "").replace(/-/g, " ")}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={toggleBgm}
+                disabled={!selectedBgm}
+                className={`px-3 py-2 rounded-xl text-[11px] font-bold border transition-all disabled:opacity-30 ${
+                  bgmPlaying
+                    ? "bg-red-500/10 border-red-400/30 text-red-400"
+                    : "bg-cyan-500/10 border-cyan-400/20 text-cyan-400 hover:bg-cyan-500/20"
+                }`}
+              >
+                {bgmPlaying ? "停止" : "试听"}
+              </button>
+            </div>
+            {selectedBgm && (
+              <audio
+                ref={bgmAudioRef}
+                src={`/bgm/${selectedBgm}`}
+                onEnded={() => setBgmPlaying(false)}
+                preload="none"
+              />
+            )}
+          </section>
+        )}
+
         {/* 布局模式切换 */}
         <section className="mb-8">
           <div className="flex items-center gap-2 mb-4">
@@ -209,6 +343,30 @@ export const Sidebar: React.FC<SidebarProps> = ({
             >
               单项详情 (Detail)
             </button>
+          </div>
+          {/* 预览语言切换 */}
+          <div className="mt-3 flex items-center gap-2">
+            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+              预览语言
+            </span>
+            <div className="flex-1 flex p-1 bg-zinc-900 rounded-xl border border-white/5">
+              {[
+                { id: "zh" as const, label: "中文" },
+                { id: "en" as const, label: "English" },
+              ].map((lang) => (
+                <button
+                  key={lang.id}
+                  onClick={() => togglePreviewLang(lang.id)}
+                  className={`flex-1 py-1.5 text-[11px] font-bold rounded-lg transition-all ${
+                    previewLang === lang.id
+                      ? "bg-zinc-800 text-white shadow-sm"
+                      : "text-zinc-500 hover:text-zinc-300"
+                  }`}
+                >
+                  {lang.label}
+                </button>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -334,16 +492,51 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <div className="space-y-4">
                 <div>
                   <label className="text-[10px] text-zinc-500 uppercase font-bold mb-1.5 block">
-                    作者名称
+                    {platform === "youtube" ? "YouTube 名称" : "作者名称"}
                   </label>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">@</span>
                     <input
                       type="text"
-                      value={authorName}
-                      onChange={(e) => setAuthorName(e.target.value)}
+                      value={platform === "youtube" ? youtubeName : authorName}
+                      onChange={(e) =>
+                        platform === "youtube"
+                          ? setYoutubeName(e.target.value)
+                          : setAuthorName(e.target.value)
+                      }
                       className="w-full bg-zinc-900/50 border border-white/5 rounded-xl pl-8 pr-4 py-2.5 text-sm outline-none focus:border-cyan-400/40 transition-colors"
                     />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[10px] text-zinc-500 uppercase font-bold mb-1.5 block">
+                    {platform === "youtube" ? "YouTube 头像" : "作者头像"}
+                  </label>
+                  <div className="flex gap-2.5">
+                    {[
+                      { id: "/my-avatar.jpg", name: "默认" },
+                      { id: "/youtube.jpg", name: "YouTube" },
+                    ].map((av) => (
+                      <button
+                        key={av.id}
+                        onClick={() =>
+                          platform === "youtube"
+                            ? setYoutubeAvatar(av.id)
+                            : setAuthorAvatar(av.id)
+                        }
+                        title={av.name}
+                        className={`relative w-12 h-12 rounded-full overflow-hidden border-2 transition-all ${
+                          (platform === "youtube" ? youtubeAvatar : authorAvatar) === av.id
+                            ? "border-cyan-400 ring-2 ring-cyan-400/30"
+                            : "border-white/10 hover:border-white/30"
+                        }`}
+                      >
+                        <img src={av.id} alt={av.name} className="w-full h-full object-cover" />
+                        <span className="absolute bottom-0 inset-x-0 text-center text-[7px] font-bold bg-black/50 text-white py-0.5">
+                          {av.name}
+                        </span>
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -385,34 +578,68 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <div className="flex items-center gap-2 mb-1">
                   <Sparkles className="w-4 h-4 text-cyan-400" />
                   <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
-                    一键分发 (Beta)
+                    平台分发
                   </h3>
                 </div>
-                {["douyin"].map((p) => (
-                  <div key={p} className="p-3 rounded-xl bg-zinc-900 border border-white/5 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold">抖音 (Douyin)</span>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-mono ${platformStatus[p] ? "bg-green-500/20 text-green-400" : "bg-zinc-800 text-zinc-500"}`}>
-                        {platformStatus[p] ? "已登录" : "未登录"}
-                      </span>
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => loginPlatform(p)}
-                        className="flex-1 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-bold transition-all"
-                      >
-                        扫码登录
-                      </button>
-                      <button
-                        onClick={() => publishToPlatform(p)}
-                        disabled={!platformStatus[p] || loading}
-                        className="flex-1 py-2 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 text-[10px] font-bold transition-all disabled:opacity-30"
-                      >
-                        自动发布
-                      </button>
-                    </div>
+
+                {/* 抖音：自动发布 */}
+                <div className="p-3 rounded-xl bg-zinc-900 border border-white/5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold flex items-center gap-1.5">
+                      <Video className="w-3.5 h-3.5 text-cyan-400" />
+                      抖音 (Douyin)
+                    </span>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-mono ${platformStatus.douyin ? "bg-green-500/20 text-green-400" : "bg-zinc-800 text-zinc-500"}`}>
+                      {platformStatus.douyin ? "已登录" : "未登录"}
+                    </span>
                   </div>
-                ))}
+                  <p className="text-[10px] text-zinc-500">图文轮播 · 中文文案</p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => loginPlatform("douyin")}
+                      className="flex-1 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-bold transition-all"
+                    >
+                      扫码登录
+                    </button>
+                    <button
+                      onClick={() => publishToPlatform("douyin")}
+                      disabled={!platformStatus.douyin || loading}
+                      className="flex-1 py-2 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 text-[10px] font-bold transition-all disabled:opacity-30"
+                    >
+                      自动发布
+                    </button>
+                  </div>
+                </div>
+
+                {/* YouTube：手动上传 */}
+                <div className="p-3 rounded-xl bg-zinc-900 border border-white/5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold flex items-center gap-1.5">
+                      <Youtube className="w-3.5 h-3.5 text-cyan-400" />
+                      YouTube Shorts
+                    </span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-500 font-mono">
+                      手动
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-zinc-500">生成竖屏 MP4 · 英文文案，自行上传到 Studio</p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={exportYoutubeVideo}
+                      disabled={loading}
+                      className="flex-1 py-2 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 text-[10px] font-bold transition-all disabled:opacity-30"
+                    >
+                      生成并下载 MP4
+                    </button>
+                    <button
+                      onClick={copyYoutubeCopy}
+                      disabled={loading}
+                      className="flex-1 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-bold transition-all disabled:opacity-30"
+                    >
+                      复制英文文案
+                    </button>
+                  </div>
+                </div>
               </div>
 
               {/* Hashtags */}

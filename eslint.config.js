@@ -36,6 +36,6 @@ export default tseslint.config(
     },
   },
   {
-    ignores: ['dist/**', 'node_modules/**', '.planning/**'],
+    ignores: ['dist/**', 'node_modules/**', '.planning/**', '**/*.min.js'],
   }
 );

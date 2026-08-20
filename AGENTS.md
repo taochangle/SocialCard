@@ -20,6 +20,7 @@
 - TypeScript for all code; 2-space indentation, single quotes, semicolons.
 - `camelCase` for variables/functions, `PascalCase` for components, `UPPER_SNAKE_CASE` for constants (e.g. `TEMPLATES`).
 - Backend services follow `xxxService.ts`; all routes live in `apiRoutes.ts`.
+- `videoService.ts` converts 9:16 PNG frames into an MP4 (H.264 + AAC) via the system `ffmpeg` (required for YouTube Shorts).
 - UI uses Tailwind utility classes; keep components focused and import shared types from `src/types.ts`.
 
 ## Testing Guidelines
@@ -35,7 +36,9 @@
 
 - Copy `.env.example` to `.env` (gitignored; never commit). Required variables: `GITHUB_PAT`, `AI_BASE_URL`, `AI_MODEL` (Ollama by default).
 - Playwright drives the system Google Chrome (`channel: "chrome"`, `headless: false`) — Chrome must be installed and a desktop display is required; do not install Playwright's bundled Chromium.
-- Known gotcha: the current `.env.example` contains literal `\n` sequences in the AI block — use real newlines when creating `.env`.
+- `server/stealth.min.js` (puppeteer-extra stealth evasions, MIT) is injected for YouTube sessions to avoid Google's automated-login block; do not remove it.
+- `ffmpeg` must be installed for YouTube MP4 export (`brew install ffmpeg` if missing).
+- Set `YT_PROXY` (e.g. `http://127.0.0.1:7890`) in `.env` if YouTube is unreachable from the local network.
 
 ## Agent-Specific Instructions
 
@@ -43,4 +46,4 @@
 
 ## Architecture Overview
 
-- Scrape GitHub Trending (Top 15) → fetch topics/avatar/README via the GitHub API → Ollama generates Chinese summaries, keywords, and a daily digest → cache in SQLite → render cards via `html-to-image` and export 9:16 PNGs → Playwright publishes to Douyin.
+- Scrape GitHub Trending (Top 15) → fetch topics/avatar/README via the GitHub API → Ollama generates Chinese + English summaries, keywords, and a daily digest → cache in SQLite → render 9:16 cards via `html-to-image` → Playwright publishes image carousels to Douyin (Chinese copy). YouTube Shorts is manual: the UI exports a 9:16 MP4 via `ffmpeg` plus English title/description/hashtags for pasting into YouTube Studio. (Automated YouTube code remains in `platformService.ts` but is not exposed in the UI.)

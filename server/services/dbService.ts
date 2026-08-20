@@ -48,13 +48,28 @@ db.exec(`
   );
 `);
 
+// Lightweight migrations: add columns if missing (better-sqlite3 has no ALTER IF NOT EXISTS)
+function ensureColumn(table: string, column: string, ddl: string) {
+  const cols = db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[];
+  if (!cols.some((c) => c.name === column)) {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${ddl}`);
+  }
+}
+
+ensureColumn("project_summaries", "aiSummaryEn", "aiSummaryEn TEXT");
+ensureColumn("project_summaries", "aiKeywordsEn", "aiKeywordsEn TEXT");
+ensureColumn("project_summaries", "readme", "readme TEXT");
+ensureColumn("daily_summaries", "summaryEn", "summaryEn TEXT");
+ensureColumn("daily_summaries", "hashtagsEn", "hashtagsEn TEXT");
+
 export const dbService = {
   getProjectsByDate(date: string) {
     return db.prepare(`
       SELECT 
         r.*, 
         m.avatarUrl, m.topics as keywords,
-        s.aiSummary, s.aiKeywords 
+        s.aiSummary, s.aiKeywords,
+        s.aiSummaryEn, s.aiKeywordsEn
       FROM repositories r
       LEFT JOIN project_meta m ON r.title = m.title
       LEFT JOIN project_summaries s ON r.title = s.title
@@ -65,6 +80,12 @@ export const dbService = {
 
   getGlobalStateByDate(date: string) {
     return db.prepare("SELECT * FROM daily_summaries WHERE date = ?").get(date) as any;
+  },
+
+  getProjectSummary(title: string): { readme?: string | null; aiSummary?: string | null; aiSummaryEn?: string | null } | undefined {
+    return db.prepare("SELECT * FROM project_summaries WHERE title = ?").get(title) as
+      | { readme?: string | null; aiSummary?: string | null; aiSummaryEn?: string | null }
+      | undefined;
   },
 
   saveTrendingProjects(date: string, projects: any[]) {
@@ -94,25 +115,40 @@ export const dbService = {
     `).run(title, avatarUrl, topics, date);
   },
 
-  saveProjectSummary(title: string, summary: string, keywords: string, date: string) {
+  saveProjectSummary(
+    title: string,
+    summary: string,
+    keywords: string,
+    date: string,
+    extras?: { summaryEn?: string; keywordsEn?: string; readme?: string }
+  ) {
     db.prepare(`
       INSERT INTO project_summaries (title, aiSummary, aiKeywords, date)
       VALUES (?, ?, ?, ?)
       ON CONFLICT(title) DO UPDATE SET
-        aiSummary = excluded.aiSummary,
-        aiKeywords = excluded.aiKeywords,
+        aiSummary = COALESCE(excluded.aiSummary, aiSummary),
+        aiKeywords = COALESCE(excluded.aiKeywords, aiKeywords),
         date = excluded.date
-    `).run(title, summary, keywords, date);
+    `).run(title, summary || null, keywords || null, date);
+
+    if (extras?.summaryEn || extras?.keywordsEn || extras?.readme) {
+      db.prepare(`
+        UPDATE project_summaries SET
+          aiSummaryEn = COALESCE(?, aiSummaryEn),
+          aiKeywordsEn = COALESCE(?, aiKeywordsEn),
+          readme = COALESCE(?, readme)
+        WHERE title = ?
+      `).run(extras.summaryEn || null, extras.keywordsEn || null, extras.readme || null, title);
+    }
   },
 
-  saveGlobalState(date: string, summary: string, hashtags: string) {
+  saveGlobalState(date: string, summary: string, hashtags: string, lang: "zh" | "en" = "zh") {
     db.prepare(`
-      INSERT INTO daily_summaries (date, summary, hashtags)
-      VALUES (?, ?, ?)
+      INSERT INTO daily_summaries (date, summary, hashtags, summaryEn, hashtagsEn)
+      VALUES (?, ?, ?, ?, ?)
       ON CONFLICT(date) DO UPDATE SET
-        summary = excluded.summary,
-        hashtags = excluded.hashtags
-    `).run(date, summary, hashtags);
+        ${lang === "en" ? "summaryEn = excluded.summaryEn, hashtagsEn = excluded.hashtagsEn" : "summary = excluded.summary, hashtags = excluded.hashtags"}
+    `).run(date, lang === "zh" ? summary : "", lang === "zh" ? hashtags : "", lang === "en" ? summary : "", lang === "en" ? hashtags : "");
   },
 
   getPlatformSession(platform: string) {
