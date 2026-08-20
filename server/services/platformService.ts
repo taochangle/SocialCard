@@ -15,9 +15,6 @@ export const platformService = {
       if (platform === "douyin") {
         loginUrl = "https://creator.douyin.com/";
         targetUrl = "creator.douyin.com/creator-micro/home";
-      } else if (platform === "xiaohongshu") {
-        loginUrl = "https://creator.xiaohongshu.com/login?source=official";
-        targetUrl = "creator.xiaohongshu.com/new/home";
       } else {
         throw new Error("Unsupported platform");
       }
@@ -37,7 +34,10 @@ export const platformService = {
     }
   },
 
-  async publish(platform: string, payload: any) {
+  async publish(platform: string, payload: { images: string[]; publishDate: string; content: string; hashtags: string }) {
+    if (platform !== "douyin") {
+      throw new Error(`Unsupported platform: ${platform}`);
+    }
     const { images, publishDate, content, hashtags } = payload;
     const session = dbService.getPlatformSession(platform);
     if (!session) {
@@ -97,7 +97,7 @@ export const platformService = {
         try {
           const titleInput = await page.waitForSelector('.semi-input.semi-input-default', { timeout: 10000 });
           await titleInput.fill(publishDate);
-        } catch (e) {
+        } catch {
           await page.getByPlaceholder('添加作品标题').fill(publishDate);
         }
 
@@ -178,98 +178,7 @@ export const platformService = {
           const auditTab = await page.getByText('审核中').first();
           await auditTab.click();
           await page.waitForTimeout(2000);
-        } catch (e) {}
-        } else if (platform === "xiaohongshu") {
-          await page.goto("https://creator.xiaohongshu.com/publish/publish?from=tab_switch&target=image", { waitUntil: 'networkidle' });
-
-          console.log("[Publish] Uploading images to XHS sequentially...");
-          // Upload Cover (0.png)
-          try {
-            console.log("[Publish] Clicking '上传图片' button for the first image...");
-            const [fileChooser] = await Promise.all([
-              page.waitForEvent('filechooser'),
-              page.getByText('上传图片').first().click(),
-            ]);
-            await fileChooser.setFiles(filePayloads[0]);
-            await page.waitForTimeout(3000); // XHS needs more time to process cover
-          } catch (e) {
-            console.warn("[Publish] XHS '上传图片' click failed, falling back to direct input:", e.message);
-            const fileInput = await page.waitForSelector('input[type="file"]');
-            await fileInput.setInputFiles(filePayloads[0]);
-            await page.waitForTimeout(3000);
-          }
-
-          // Upload remaining images
-          if (filePayloads.length > 1) {
-            for (let i = 1; i < filePayloads.length; i++) {
-              console.log(`[Publish] Uploading image ${i} to XHS...`);
-              try {
-                const [fileChooser] = await Promise.all([
-                  page.waitForEvent('filechooser'),
-                  page.locator('.img-upload-area .entry').first().click(),
-                ]);
-                await fileChooser.setFiles(filePayloads[i]);
-                await page.waitForTimeout(1500); // Wait for each upload
-              } catch (e) {
-                console.warn(`[Publish] XHS additional image ${i} upload failed:`, e.message);
-              }
-            }
-          }
-
-        console.log("[Publish] Filling title...");
-        await page.getByPlaceholder('填写标题会有更多赞哦').fill(publishDate);
-
-        console.log("[Publish] Filling description...");
-        const editor = await page.waitForSelector('.editor-content p');
-        await editor.click();
-        await page.keyboard.type(content);
-
-        console.log("[Publish] Adding hashtags...");
-        const tags = hashtags.split(' ').filter((t: string) => t.startsWith('#'));
-        for (const tag of tags) {
-          await page.keyboard.type(tag);
-          await page.keyboard.press('Enter');
-          
-          // 等待并点击弹出的话题确认框中的第一个选项
-          try {
-            const firstItem = await page.waitForSelector('#creator-editor-topic-container .item', { timeout: 3000 });
-            await firstItem.click();
-            await page.waitForTimeout(500);
-          } catch (e) {
-            console.warn(`[Publish] Topic item for ${tag} not found or click failed:`, e.message);
-          }
-        }
-
-        console.log("[Publish] Selecting collection...");
-        try {
-          await page.getByText('选择合集').first().click();
-          await page.waitForTimeout(1000);
-          const collectionItem = await page.locator('.collection-plugin-popover-content .item').filter({ hasText: 'Github Trending' }).first();
-          await collectionItem.click();
-        } catch (e) {
-          console.warn("[Publish] XHS collection selection failed:", e.message);
-        }
-
-        console.log("[Publish] Enabling original declaration...");
-        try {
-          const originalLabel = await page.getByText('原创声明').first();
-          const radio = await originalLabel.locator('..').locator('input[type="radio"], .ant-radio-input').first();
-          await radio.click();
-        } catch (e) {}
-
-        console.log("[Publish] Ready to publish!");
-        try {
-          await page.locator('button:has-text("发布")').first().click();
-          console.log("[Publish] XHS publish button clicked.");
-          
-          // 等待跳转并检查“审核中”
-          await page.waitForTimeout(3000);
-          await page.goto("https://creator.xiaohongshu.com/new/note-manager", { waitUntil: 'networkidle' });
-          await page.getByText('审核中').first().click();
-          await page.waitForTimeout(2000);
-        } catch (e) {
-          console.error("[Publish] XHS final steps failed:", e.message);
-        }
+        } catch { /* ignore */ }
       }
 
       return { success: true, message: `Automation foundation reached for ${platform}` };

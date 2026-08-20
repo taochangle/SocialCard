@@ -11,8 +11,8 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { TEMPLATES } from "../constants";
-import { Theme, RankingItem } from "../types";
+import { TEMPLATES, CARD_STYLES } from "../constants";
+import { Theme, RankingItem, CardStyle } from "../types";
 
 interface SidebarProps {
   loading: boolean;
@@ -23,6 +23,8 @@ interface SidebarProps {
   setLayoutMode: (mode: "index" | "detail") => void;
   selectedTemplate: string;
   setSelectedTemplate: (id: string) => void;
+  cardStyle: CardStyle;
+  setCardStyle: (style: CardStyle) => void;
   setTheme: (theme: Theme) => void;
   authorName: string;
   setAuthorName: (name: string) => void;
@@ -52,6 +54,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   setLayoutMode,
   selectedTemplate,
   setSelectedTemplate,
+  cardStyle,
+  setCardStyle,
   setTheme,
   authorName,
   setAuthorName,
@@ -286,6 +290,38 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         </section>
 
+        {/* 卡片样式 */}
+        <section className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <LayoutGrid className="w-4 h-4 text-cyan-400" />
+              <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
+                卡片样式
+              </h3>
+            </div>
+            <span className="text-[10px] font-mono text-zinc-500">
+              {CARD_STYLES.length} 套
+            </span>
+          </div>
+          <div className="grid grid-cols-4 gap-1.5">
+            {CARD_STYLES.map((style) => (
+              <button
+                key={style.id}
+                disabled={loading}
+                onClick={() => setCardStyle(style.id)}
+                title={style.desc}
+                className={`rounded-lg border px-1 py-2 text-[10px] font-bold transition-all ${
+                  cardStyle === style.id
+                    ? "border-cyan-400 ring-2 ring-cyan-400/20 bg-zinc-900 text-white"
+                    : "border-white/5 hover:border-white/20 bg-zinc-900/40 text-zinc-400"
+                } ${loading ? "opacity-40 cursor-not-allowed" : ""}`}
+              >
+                {style.name}
+              </button>
+            ))}
+          </div>
+        </section>
+
         {layoutMode === 'index' && (
           <>
             <section className="mb-8">
@@ -352,12 +388,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     一键分发 (Beta)
                   </h3>
                 </div>
-                {["douyin", "xiaohongshu"].map((p) => (
+                {["douyin"].map((p) => (
                   <div key={p} className="p-3 rounded-xl bg-zinc-900 border border-white/5 space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold">
-                        {p === "douyin" ? "抖音 (Douyin)" : "小红书 (XHS)"}
-                      </span>
+                      <span className="text-xs font-bold">抖音 (Douyin)</span>
                       <span className={`text-[10px] px-2 py-0.5 rounded-full font-mono ${platformStatus[p] ? "bg-green-500/20 text-green-400" : "bg-zinc-800 text-zinc-500"}`}>
                         {platformStatus[p] ? "已登录" : "未登录"}
                       </span>

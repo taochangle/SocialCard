@@ -22,6 +22,8 @@ export default function App() {
         setLayoutMode={logic.setLayoutMode}
         selectedTemplate={logic.selectedTemplate}
         setSelectedTemplate={logic.setSelectedTemplate}
+        cardStyle={logic.cardStyle}
+        setCardStyle={logic.setCardStyle}
         setTheme={logic.setTheme}
         authorName={logic.authorName}
         setAuthorName={logic.setAuthorName}
@@ -44,6 +46,7 @@ export default function App() {
 
       <PreviewPanel
         layoutMode={logic.layoutMode}
+        cardStyle={logic.cardStyle}
         theme={logic.theme}
         displayDate={logic.displayDate}
         timeText={logic.timeText}

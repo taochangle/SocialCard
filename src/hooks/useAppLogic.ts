@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { toPng } from "html-to-image";
 import download from "downloadjs";
 import JSZip from "jszip";
-import { RankingItem, Theme } from "../types";
+import { RankingItem, Theme, CardStyle } from "../types";
 import { TEMPLATES, GITHUB_TRENDING_MOCK } from "../constants";
 import { dataURLtoBlob, waitForImages } from "../utils";
 
@@ -18,6 +18,7 @@ export function useAppLogic() {
 
   const [layoutMode, setLayoutMode] = useState<"index" | "detail">("index");
   const [selectedTemplate, setSelectedTemplate] = useState<string>(TEMPLATES[0].id);
+  const [cardStyle, setCardStyle] = useState<CardStyle>("classic");
   const [theme, setTheme] = useState<Theme>(TEMPLATES[0].theme);
   const [authorName, setAuthorName] = useState("xintao");
   const [content, setContent] = useState("分享，让生活有了标点符号。\nCodex 真的太快了");
@@ -40,7 +41,6 @@ export function useAppLogic() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
   const [platformStatus, setPlatformStatus] = useState<{ [key: string]: boolean }>({
     douyin: false,
-    xiaohongshu: false,
   });
 
   const previewRef = useRef<HTMLDivElement>(null);
@@ -225,7 +225,7 @@ export function useAppLogic() {
 
   const checkPlatformStatus = async () => {
     try {
-      const platforms = ["douyin", "xiaohongshu"];
+      const platforms = ["douyin"];
       const newStatus: any = {};
       for (const p of platforms) {
         const res = await fetch(`/api/platform/${p}/status`);
@@ -366,6 +366,8 @@ export function useAppLogic() {
     setLayoutMode,
     selectedTemplate,
     setSelectedTemplate,
+    cardStyle,
+    setCardStyle,
     theme,
     setTheme,
     authorName,

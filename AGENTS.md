@@ -43,4 +43,4 @@
 
 ## Architecture Overview
 
-- Scrape GitHub Trending (Top 15) → fetch topics/avatar/README via the GitHub API → Ollama generates Chinese summaries, keywords, and a daily digest → cache in SQLite → render cards via `html-to-image` and export 1080×1440 PNGs → Playwright publishes to Douyin/Xiaohongshu.
+- Scrape GitHub Trending (Top 15) → fetch topics/avatar/README via the GitHub API → Ollama generates Chinese summaries, keywords, and a daily digest → cache in SQLite → render cards via `html-to-image` and export 9:16 PNGs → Playwright publishes to Douyin.

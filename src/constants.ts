@@ -1,4 +1,41 @@
-import { Template, RankingItem } from "./types";
+import { Template, RankingItem, CardStyle } from "./types";
+
+export const CARD_STYLES: { id: CardStyle; name: string; desc: string }[] = [
+  { id: "classic", name: "经典榜单", desc: "信息密度高" },
+  { id: "poster", name: "大字报", desc: "抖音封面风" },
+  { id: "terminal", name: "终端代码", desc: "开发者人设" },
+  { id: "magazine", name: "杂志编辑", desc: "编辑感强" },
+  { id: "databar", name: "数据条", desc: "星标可视化" },
+  { id: "cardstack", name: "卡片流", desc: "产品感" },
+  { id: "glass", name: "玻璃拟态", desc: "毛玻璃质感" },
+  { id: "chat", name: "聊天对话", desc: "AI 通知流" },
+  { id: "neon", name: "霓虹辉光", desc: "赛博夜店风" },
+  { id: "newspaper", name: "报纸复古", desc: "纸媒感" },
+  { id: "minimal", name: "极简留白", desc: "高级感" },
+  { id: "notebook", name: "手账便签", desc: "纸胶带" },
+  { id: "timeline", name: "时间轴", desc: "节点排行" },
+  { id: "browser", name: "浏览器窗口", desc: "网页感" },
+  { id: "github", name: "GitHub PR", desc: "合并绿勾" },
+  { id: "cinema", name: "电影海报", desc: "卡司表" },
+  { id: "hud", name: "科幻 HUD", desc: "扫描线读数" },
+  { id: "pixel", name: "像素风", desc: "8-bit 复古" },
+  { id: "ticket", name: "票据", desc: "入场券" },
+  { id: "sign", name: "路牌", desc: "高速指示" },
+  { id: "toc", name: "目录书页", desc: "精装书" },
+  { id: "notify", name: "系统通知", desc: "锁屏堆叠" },
+  { id: "receipt", name: "收据", desc: "热敏纸" },
+  { id: "aurora", name: "极光渐变", desc: "流动光带" },
+  { id: "cyber", name: "赛博边框", desc: "四角括号" },
+  { id: "glitch", name: "故障风", desc: "RGB 错位" },
+  { id: "bauhaus", name: "几何构成", desc: "包豪斯" },
+  { id: "greeting", name: "贺卡", desc: "金边排印" },
+  { id: "infographic", name: "信息图", desc: "数据可视化" },
+  { id: "pornhub", name: "Githubhub", desc: "播放器梗图" },
+  { id: "x", name: "X 推文", desc: "转发点赞" },
+  { id: "telegram", name: "Telegram", desc: "蓝色频道" },
+  { id: "instagram", name: "Instagram", desc: "帖子卡片" },
+  { id: "onlyfans", name: "OnlyFans", desc: "订阅解锁" },
+];
 
 export const TEMPLATES: Template[] = [
   {

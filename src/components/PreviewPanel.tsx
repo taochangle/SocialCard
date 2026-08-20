@@ -1,12 +1,13 @@
 import React from "react";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
-import { Theme, RankingItem } from "../types";
+import { Theme, RankingItem, CardStyle } from "../types";
 import { IndexCard } from "./IndexCard";
 import { DetailCard } from "./DetailCard";
 import { getMaskGradient } from "../utils";
 
 interface PreviewPanelProps {
   layoutMode: "index" | "detail";
+  cardStyle: CardStyle;
   theme: Theme;
   displayDate: string;
   timeText: string;
@@ -33,6 +34,7 @@ interface PreviewPanelProps {
 
 export const PreviewPanel: React.FC<PreviewPanelProps> = ({
   layoutMode,
+  cardStyle,
   theme,
   displayDate,
   timeText,
@@ -114,7 +116,11 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({
             <div className="absolute inset-0 flex items-center justify-center p-[7%]">
               {layoutMode === "detail" ? (
                 <DetailCard
+                  style={cardStyle}
                   theme={theme}
+                  displayDate={displayDate}
+                  timeText={timeText}
+                  authorName={authorName}
                   projectName={projectName}
                   projectUrl={projectUrl}
                   stars={stars}
@@ -126,6 +132,7 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({
                 />
               ) : (
                 <IndexCard
+                  style={cardStyle}
                   theme={theme}
                   displayDate={displayDate}
                   timeText={timeText}
