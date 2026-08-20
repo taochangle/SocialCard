@@ -1,4 +1,5 @@
 import React from "react";
+import { Bot, Flame, Send, Lock, BadgeCheck, Play, Heart, MessageCircle, Repeat2, BarChart2, Bookmark } from "lucide-react";
 import { CardStyle } from "../types";
 import { DetailStyleProps, formatStars } from "./cardStyleProps";
 
@@ -238,7 +239,7 @@ const Glass: Variant = (p) => (
 const Chat: Variant = (p) => (
   <div {...base(p, "", { backgroundColor: "#0f172a", color: "#ffffff" })}>
     <div className="flex items-center gap-3 px-4 py-3 bg-white/[0.05] border-b border-white/10">
-      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-sm">🤖</div>
+      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-sm"><Bot className="w-4 h-4" /></div>
       <div className="flex-1">
         <div className="text-[13px] font-black leading-none">Trending Bot</div>
         <div className="text-[9px] text-emerald-400 mt-1">● AI 在线</div>
@@ -250,9 +251,9 @@ const Chat: Variant = (p) => (
         <div className="text-[11px]">今天什么项目最火？</div>
       </div>
       <div className="flex gap-2 items-end">
-        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-[9px]">🤖</div>
+        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-[9px]"><Bot className="w-3 h-3" /></div>
         <div className="max-w-[85%] rounded-2xl rounded-bl-sm bg-white/10 border border-white/10 px-3 py-2.5">
-          <div className="text-[11px] font-bold">{p.projectName.split("/")[1]} 🔥</div>
+          <div className="text-[11px] font-bold flex items-center gap-1">{p.projectName.split("/")[1]} <Flame className="w-3.5 h-3.5" /></div>
           <Summary p={p} className="text-[10px] leading-relaxed text-zinc-300 mt-1 line-clamp-[12]" />
           <div className="flex gap-1.5 mt-2">
             <span className="px-1.5 py-0.5 rounded bg-cyan-400/15 text-cyan-300 text-[8px] font-mono">★{formatStars(p.stars)}</span>
@@ -261,7 +262,7 @@ const Chat: Variant = (p) => (
         </div>
       </div>
       <div className="flex gap-2 items-end">
-        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-[9px]">🤖</div>
+        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-[9px]"><Bot className="w-3 h-3" /></div>
         <div className="max-w-[85%] rounded-2xl rounded-bl-sm bg-white/10 border border-white/10 px-3 py-2">
           <div className="text-[9px] text-zinc-400 mb-1.5">相关话题</div>
           <div className="flex flex-wrap gap-1.5">
@@ -274,7 +275,7 @@ const Chat: Variant = (p) => (
     </div>
     <div className="px-4 py-3 border-t border-white/10 flex items-center gap-2">
       <div className="flex-1 rounded-full bg-white/10 border border-white/10 px-4 py-2 text-[10px] text-zinc-500">输入消息…</div>
-      <div className="w-8 h-8 rounded-full bg-cyan-500 flex items-center justify-center text-sm">➤</div>
+      <div className="w-8 h-8 rounded-full bg-cyan-500 flex items-center justify-center text-sm"><Send className="w-4 h-4" /></div>
     </div>
   </div>
 );
@@ -403,7 +404,7 @@ const Browser: Variant = (p) => (
     </div>
     <div className="flex items-center gap-2 bg-[#e8ecf0] px-3 py-1.5 border-b border-zinc-200">
       <div className="flex-1 flex items-center gap-1.5 rounded-full bg-white border border-zinc-200 px-3 py-1 text-[9px] text-zinc-500">
-        <span className="text-emerald-500">🔒</span> {p.projectUrl}
+        <Lock className="w-3 h-3 text-emerald-500" /> {p.projectUrl}
       </div>
     </div>
     <div className="flex-1 px-4 py-3 overflow-hidden">
@@ -464,7 +465,7 @@ const GithubUI: Variant = (p) => (
       </div>
     </div>
     <div className="px-4 py-2 border-t border-zinc-200 flex justify-between text-[8px] text-zinc-400">
-      <span>✓ merged {p.timeText}</span>
+      <span className="flex items-center gap-1"><BadgeCheck className="w-3 h-3 text-emerald-600" /> merged {p.timeText}</span>
       <span className="font-mono">@xintao</span>
     </div>
   </div>
@@ -608,28 +609,29 @@ const Toc: Variant = (p) => (
 const Notify: Variant = (p) => (
   <div {...base(p, "px-[6%] py-[6%]", { background: "linear-gradient(to bottom, #14171c, #0b0d10)", color: "#ffffff" })}>
     <div className="text-center text-[9px] font-mono text-zinc-500 mb-3">{p.displayDate} {p.timeText}</div>
-    <div className="flex-1 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 p-4 overflow-hidden">
-      <div className="flex items-center gap-3">
-        <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-lg" style={{ background: `linear-gradient(135deg, ${p.theme.accentColor}, ${p.theme.textColor})` }}>🔥</div>
+    <div className="flex-1 min-h-0 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 p-4 flex flex-col overflow-hidden">
+      <div className="flex items-center gap-3 shrink-0">
+        <img {...avatarFor(p.projectName, p.avatarUrl)} className="w-10 h-10 rounded-full object-cover" />
         <div className="min-w-0">
-          <div className="text-[11px] font-bold" style={{ color: p.theme.accentColor }}>GitHub Trending</div>
-          <div className="text-[9px] text-zinc-400">刚刚</div>
+          <div className="text-[11px] font-bold truncate">{p.projectName.split("/")[0]}</div>
+          <div className="text-[9px] text-zinc-400 truncate">{p.projectName.split("/")[1] || p.projectName} · 刚刚</div>
         </div>
       </div>
-      <h2 className="text-lg font-black mt-3">{p.projectName.split("/")[1] || p.projectName}</h2>
-      <Summary p={p} className="text-[11px] leading-relaxed text-zinc-300 mt-1.5 line-clamp-[10]" />
-      <div className="flex gap-2 mt-3">
+      <h2 className="text-lg font-black mt-3 shrink-0">{p.projectName.split("/")[1] || p.projectName}</h2>
+      <div className="flex-1 min-h-0 overflow-hidden mt-1.5">
+        <Summary p={p} className="text-[11px] leading-relaxed text-zinc-300 line-clamp-[10]" />
+      </div>
+      <div className="flex gap-2 mt-3 shrink-0">
         <span className="px-2 py-1 rounded-lg bg-white/10 text-[9px] font-bold">★ {formatStars(p.stars)}</span>
         <span className="px-2 py-1 rounded-lg bg-emerald-400/15 text-emerald-300 text-[9px] font-bold">+{formatStars(p.starsToday)}</span>
       </div>
-      <div className="flex gap-1.5 mt-3 flex-wrap">
+      <div className="flex gap-1.5 mt-3 flex-wrap shrink-0">
         {p.keywordList.slice(0, 6).map((tag, i) => (
           <span key={i} className="px-2 py-0.5 rounded-full bg-white/10 text-[8px]">#{tag}</span>
         ))}
       </div>
     </div>
-    <div className="flex-1" />
-    <div className="text-center text-[9px] text-zinc-500 font-mono">@xintao · 查看全部</div>
+    <div className="text-center text-[9px] text-zinc-500 font-mono pt-2">@xintao · 查看全部</div>
   </div>
 );
 
@@ -809,7 +811,7 @@ const Pornhub: Variant = (p) => (
   <div {...base(p, "", { backgroundColor: "#000000", color: "#ffffff" })}>
     <div className="flex items-center justify-center gap-1 py-2.5 border-b border-white/10 relative">
       <span className="text-[18px] font-black text-orange-500 tracking-tight">Github</span>
-      <span className="text-[13px] font-black text-orange-500">▶</span>
+      <Play className="w-3.5 h-3.5 fill-current text-orange-500" />
       <span className="text-[18px] font-black text-orange-500 tracking-tight">hub</span>
       <span className="absolute right-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 border border-orange-500 text-orange-500 text-[8px] font-bold">HD</span>
     </div>
@@ -842,16 +844,16 @@ const Pornhub: Variant = (p) => (
 const XPost: Variant = (p) => (
   <div {...base(p, "", { backgroundColor: "#ffffff", color: "#0f1419" })}>
     <div className="px-4 pt-4 flex items-center gap-3">
-      <div className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center text-base font-black">𝕏</div>
+      <img {...avatarFor(p.projectName, p.avatarUrl)} className="w-10 h-10 rounded-full object-cover" />
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1 text-[12px] font-black truncate">GitHub Trending <span className="text-[#1d9bf0]">✓</span></div>
-        <div className="text-[10px] text-zinc-500">@githubtrending · 刚刚</div>
+        <div className="flex items-center gap-1 text-[12px] font-black truncate">{p.projectName.split("/")[0]} <BadgeCheck className="w-4 h-4 text-[#1d9bf0]" /></div>
+        <div className="text-[10px] text-zinc-500">@{p.projectName.split("/")[0]} · 刚刚</div>
       </div>
     </div>
-    <div className="px-4 py-2 text-[11px] text-zinc-500">回复 @xintao</div>
+    <div className="px-4 py-2 text-[11px] text-zinc-500">回复 @{p.authorName}</div>
     <div className="px-4 flex-1 min-h-0 overflow-hidden">
       <p className="text-[13px] leading-relaxed">
-        今日榜首 <span className="font-black">{p.projectName.split("/")[1] || p.projectName}</span> —— AI 一键生成爆款视频的开源神器 🧵
+        榜单 #{p.currentIndex + 1} · <span className="font-black">{p.projectName.split("/")[1] || p.projectName}</span> 🧵
       </p>
       <Summary p={p} className="text-[11px] leading-relaxed text-zinc-600 mt-1.5 line-clamp-[11]" />
       <div className="mt-3 flex gap-2">
@@ -865,7 +867,7 @@ const XPost: Variant = (p) => (
       </div>
     </div>
     <div className="px-4 py-3 border-t border-zinc-100 flex justify-around text-[10px] text-zinc-500">
-      <span>💬 {p.keywordList.length}</span><span>🔁 {formatStars(p.stars)}</span><span className="text-[#f91880]">❤️ +{formatStars(p.starsToday)}</span><span>📊 #{p.currentIndex + 1}</span>
+      <span className="flex items-center gap-1"><MessageCircle className="w-3.5 h-3.5" /> {p.keywordList.length}</span><span className="flex items-center gap-1"><Repeat2 className="w-3.5 h-3.5" /> {formatStars(p.stars)}</span><span className="flex items-center gap-1 text-[#f91880]"><Heart className="w-3.5 h-3.5" /> +{formatStars(p.starsToday)}</span><span className="flex items-center gap-1"><BarChart2 className="w-3.5 h-3.5" /> #{p.currentIndex + 1}</span>
     </div>
   </div>
 );
@@ -873,7 +875,7 @@ const XPost: Variant = (p) => (
 const Telegram: Variant = (p) => (
   <div {...base(p, "", { backgroundColor: "#e7ebf0", color: "#111111" })}>
     <div className="flex items-center gap-2.5 px-3 py-2.5 bg-[#2aabee] text-white">
-      <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#2aabee] font-black text-sm">✈</div>
+      <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#2aabee]"><Send className="w-4 h-4" /></div>
       <div className="flex-1">
         <div className="text-[12px] font-bold leading-none">GitHub Trending</div>
         <div className="text-[8px] opacity-80 mt-0.5">在线</div>
@@ -885,7 +887,7 @@ const Telegram: Variant = (p) => (
       </div>
       <div className="max-w-[88%] rounded-xl rounded-tl-sm bg-white px-3 py-2.5 shadow-sm">
         <div className="text-[10px] font-bold text-[#2aabee]">GitHub Trending</div>
-        <div className="text-[11px] font-bold mt-1">{p.projectName.split("/")[1] || p.projectName} 🔥</div>
+        <div className="text-[11px] font-bold mt-1 flex items-center gap-1">{p.projectName.split("/")[1] || p.projectName} <Flame className="w-3.5 h-3.5" /></div>
         <Summary p={p} className="text-[11px] leading-relaxed mt-1 line-clamp-[11]" />
         <div className="flex gap-1.5 mt-2">
           <span className="px-1.5 py-0.5 rounded bg-[#e8f3fd] text-[#2aabee] text-[8px] font-bold">★ {formatStars(p.stars)}</span>
@@ -901,7 +903,7 @@ const Telegram: Variant = (p) => (
     </div>
     <div className="px-3 py-2.5 bg-white flex items-center gap-2">
       <div className="flex-1 rounded-full bg-[#e7ebf0] px-3 py-1.5 text-[10px] text-zinc-500">消息</div>
-      <div className="w-7 h-7 rounded-full bg-[#2aabee] flex items-center justify-center text-white text-xs">➤</div>
+      <div className="w-7 h-7 rounded-full bg-[#2aabee] flex items-center justify-center text-white"><Send className="w-3.5 h-3.5" /></div>
     </div>
   </div>
 );
@@ -922,7 +924,7 @@ const Instagram: Variant = (p) => (
       </div>
     </div>
     <div className="px-3 py-2.5">
-      <div className="flex gap-3 text-xl"><span className="text-[#fd1d1d]">♥</span><span>💬</span><span>📤</span><span className="ml-auto">🔖</span></div>
+      <div className="flex gap-3 text-xl"><Heart className="w-5 h-5 text-[#fd1d1d]" /><MessageCircle className="w-5 h-5" /><Send className="w-5 h-5" /><Bookmark className="w-5 h-5 ml-auto" /></div>
       <div className="text-[11px] font-bold mt-1.5">{(parseInt(String(p.starsToday).replace(/,/g, ""), 10) || 0).toLocaleString()} 次赞</div>
       <div className="text-[10px] mt-0.5"><Summary p={p} className="inline text-[10px] leading-relaxed" /></div>
       <div className="text-[10px] text-[#00376b] mt-0.5">
@@ -936,7 +938,7 @@ const Instagram: Variant = (p) => (
 const Onlyfans: Variant = (p) => (
   <div {...base(p, "", { backgroundColor: "#0d1017", color: "#ffffff" })}>
     <div className="px-4 pt-4 flex items-center justify-between">
-      <span className="font-black italic text-[16px] text-[#0095f2]">OnlyFans</span>
+      <span className="font-black italic text-[16px] text-[#0095f2]">GitHub Trending</span>
       <span className="text-[10px] text-zinc-500">订阅内容</span>
     </div>
     <div className="relative flex-1 mx-4 mt-3 rounded-xl overflow-hidden border border-white/10">
@@ -946,12 +948,14 @@ const Onlyfans: Variant = (p) => (
         <div className="text-[18px] font-black">{p.projectName.split("/")[1] || p.projectName}</div>
         <div className="text-[10px] text-zinc-400 mt-1">AI 一键生成爆款视频 · +{formatStars(p.starsToday)}★</div>
       </div>
-      <div className="absolute top-2 right-2 px-2 py-1 rounded bg-black/50 text-[9px] font-black text-[#0095f2] border border-[#0095f2]/50">🔒 免费解锁</div>
+      <div className="absolute top-2 right-2 px-2 py-1 rounded bg-black/50 text-[9px] font-black text-[#0095f2] border border-[#0095f2]/50 flex items-center gap-1"><Lock className="w-3 h-3" /> 免费解锁</div>
     </div>
     <div className="px-4 py-3.5">
       <div className="flex items-center justify-between rounded-xl border border-[#0095f2]/40 bg-[#0095f2]/10 px-3.5 py-2.5 gap-3">
         <div className="min-w-0">
-          <div className="text-[11px] font-black">今日榜首分析</div>
+          <div className="text-[11px] font-black">
+            榜单 #{p.currentIndex + 1} · {["深度分析", "榜单速报", "爆款拆解", "趋势解读", "精华盘点"][p.currentIndex % 5]}
+          </div>
           <div className="text-[9px] text-zinc-400 mt-0.5 truncate">★ {formatStars(p.stars)} · +{formatStars(p.starsToday)} · {p.keywordList.slice(0, 3).map((t) => `#${t}`).join(" ")}</div>
         </div>
         <span className="px-3 py-1.5 rounded-lg bg-[#0095f2] text-[10px] font-black shrink-0">UNLOCK</span>

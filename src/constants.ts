@@ -170,6 +170,17 @@ export const TEMPLATES: Template[] = [
       accentColor: "#7C2D12",
     },
   },
+  {
+    id: "mono-bw",
+    name: "黑白极简",
+    desc: "纯粹黑白",
+    theme: {
+      outerBg: "#FFFFFF",
+      cardBg: "#000000",
+      textColor: "#FFFFFF",
+      accentColor: "#E4E4E7",
+    },
+  },
 ];
 
 export const GITHUB_TRENDING_MOCK: RankingItem[] = [];

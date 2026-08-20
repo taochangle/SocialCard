@@ -1,8 +1,10 @@
 import React from "react";
+import { Star, Flame, Zap, Brain, Rocket, BookOpen, Heart, MessageCircle, Repeat2, BarChart2, Send, Bookmark, Play, BadgeCheck, Lock } from "lucide-react";
 import { CardStyle } from "../types";
 import { IndexStyleProps, pad, formatStars } from "./cardStyleProps";
 
 type Variant = React.FC<IndexStyleProps>;
+const NOTIFY_ICONS = [Flame, Zap, Brain, Rocket, BookOpen];
 
 const base = (p: IndexStyleProps, cls = "", extra?: React.CSSProperties) => ({
   className: `w-full h-full rounded-2xl relative overflow-hidden flex flex-col ${cls}`,
@@ -93,12 +95,12 @@ const Terminal: Variant = (p) => (
     <div className="flex-1 px-5 py-4 flex flex-col gap-2.5 overflow-hidden">
       <div className="opacity-50 text-[12px]">$ ./trend.sh --top 15 --date {p.displayDate}</div>
       <div className="text-[13px] opacity-70 mb-1" style={{ color: p.theme.accentColor }}># 今日 GitHub 爆火项目 Top{p.trendingData.length}</div>
-      {p.trendingData.slice(0, 8).map((item, idx) => (
-        <div key={item.id || idx} className="text-[13px] leading-relaxed">
-          <span style={{ color: p.theme.accentColor }}>#{pad(idx)}</span>{" "}
-          <span className="font-bold">{item.title}</span>{" "}
-          <span className="opacity-70">★{formatStars(item.stars || "")}</span>{" "}
-          <span className="opacity-50">+{item.starsToday || "0"}</span>
+      {p.trendingData.slice(0, 15).map((item, idx) => (
+        <div key={item.id || idx} className="flex items-center gap-2 text-[13px] leading-relaxed whitespace-nowrap">
+          <span style={{ color: p.theme.accentColor }}>#{pad(idx)}</span>
+          <span className="flex-1 font-bold truncate">{item.title}</span>
+          <span className="opacity-70 shrink-0">★{formatStars(item.stars || "")}</span>
+          <span className="opacity-50 shrink-0">+{item.starsToday || "0"}</span>
         </div>
       ))}
       <div className="text-[13px] opacity-50 mt-auto">$ _</div>
@@ -222,7 +224,7 @@ const Glass: Variant = (p) => (
 const Chat: Variant = (p) => (
   <div {...base(p, "", { backgroundColor: "#0f172a", color: "#ffffff" })}>
     <div className="flex items-center gap-3 px-4 py-3 bg-white/[0.05] border-b border-white/10">
-      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-sm">⭐</div>
+      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-sm"><Star className="w-4 h-4 fill-current" /></div>
       <div className="flex-1">
         <div className="text-[13px] font-black leading-none">Trending Notify</div>
         <div className="text-[9px] text-emerald-400 mt-1">● 实时推送中</div>
@@ -232,7 +234,7 @@ const Chat: Variant = (p) => (
     <div className="flex-1 flex flex-col gap-2.5 px-4 py-4 overflow-hidden">
       {p.trendingData.slice(0, 6).map((item, idx) => (
         <div key={item.id || idx} className="flex gap-2 items-end">
-          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-[9px]">⭐</div>
+          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-[9px]"><Star className="w-3 h-3 fill-current" /></div>
           <div className="max-w-[80%] rounded-2xl rounded-bl-sm bg-white/10 border border-white/10 px-3 py-2">
             <div className="text-[10px] font-bold text-cyan-300">#{pad(idx)} 今日热榜</div>
             <div className="text-[11px] font-bold mt-0.5">{item.title}</div>
@@ -352,7 +354,7 @@ const Notebook: Variant = (p) => (
       ))}
     </div>
     <div className="flex gap-2 mt-4">
-      <span className="px-2 py-1 rounded bg-amber-200/70 -rotate-3 text-[10px] font-bold">AI 火🔥</span>
+      <span className="px-2 py-1 rounded bg-amber-200/70 -rotate-3 text-[10px] font-bold flex items-center gap-1">AI 火 <Flame className="w-3.5 h-3.5" /></span>
       <span className="px-2 py-1 rounded bg-emerald-200/70 rotate-2 text-[10px] font-bold">涨粉神器</span>
     </div>
     <div className="mt-3 text-[20px] opacity-60" style={{ fontFamily: "'Caveat', cursive" }}>—— @{p.authorName} 记</div>
@@ -393,12 +395,12 @@ const Browser: Variant = (p) => (
     <div className="bg-[#e8ecf0] px-3 pt-2">
       <div className="flex gap-1">
         <div className="rounded-t-lg bg-[#f6f8fa] px-3 py-1.5 text-[10px] font-bold border border-zinc-200 border-b-0">github.com/trending</div>
-        <div className="rounded-t-lg bg-[#e8ecf0] px-3 py-1.5 text-[10px] text-zinc-500">⭐ stars</div>
+        <div className="rounded-t-lg bg-[#e8ecf0] px-3 py-1.5 text-[10px] text-zinc-500 flex items-center gap-1"><Star className="w-3 h-3" /> stars</div>
       </div>
     </div>
     <div className="flex items-center gap-2 bg-[#e8ecf0] px-3 py-1.5 border-b border-zinc-200">
       <div className="flex-1 flex items-center gap-1.5 rounded-full bg-white border border-zinc-200 px-3 py-1 text-[9px] text-zinc-500">
-        <span className="text-emerald-500">🔒</span> github.com/trending
+        <Lock className="w-3 h-3 text-emerald-500" /> github.com/trending
       </div>
     </div>
     <div className="flex-1 flex flex-col gap-2 px-4 py-3 overflow-hidden">
@@ -601,11 +603,18 @@ const Toc: Variant = (p) => (
 
 const Notify: Variant = (p) => (
   <div {...base(p, "gap-2.5 px-[6%] py-[6%]", { background: "linear-gradient(to bottom, #14171c, #0b0d10)", color: "#ffffff" })}>
-    <div className="text-center text-[9px] font-mono text-zinc-500">{p.displayDate} {p.timeText}</div>
+    <div className="flex items-center gap-2.5">
+      <img src="/my-avatar.jpg" alt="author" crossOrigin="anonymous" className="w-8 h-8 rounded-full object-cover" referrerPolicy="no-referrer" />
+      <div className="min-w-0 flex-1">
+        <div className="text-[11px] font-bold leading-none">{p.authorName}</div>
+        <div className="text-[8px] text-zinc-500 mt-0.5">Trending Notify · {p.displayDate}</div>
+      </div>
+      <span className="text-[9px] font-mono text-zinc-500">{p.timeText}</span>
+    </div>
     {p.trendingData.slice(0, 5).map((item, idx) => (
       <div key={item.id || idx} className="rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 p-3 flex items-center gap-3">
         <div className="w-9 h-9 rounded-xl flex items-center justify-center text-sm" style={{ background: `linear-gradient(135deg, ${p.theme.accentColor}, ${p.theme.textColor})` }}>
-          {["🔥", "⚡", "🧠", "🚀", "📚"][idx] || "⭐"}
+          {(() => { const Icon = NOTIFY_ICONS[idx] || Star; return <Icon className="w-4 h-4" />; })()}
         </div>
         <div className="min-w-0 flex-1">
           <div className="text-[10px] font-bold" style={{ color: p.theme.accentColor }}>#{pad(idx)} 今日热榜</div>
@@ -640,10 +649,10 @@ const Receipt: Variant = (p) => (
       </div>
       <div className="flex justify-between text-[10px] opacity-70">
         <span>支付方式</span>
-        <span>STAR ⭐</span>
+        <span className="flex items-center gap-1">STAR <Star className="w-3 h-3" /></span>
       </div>
       <div className="border-t border-dashed border-zinc-400 pt-1.5" />
-      <div className="text-center text-[9px] opacity-70">谢谢支持开源 ❤️ @{p.authorName}</div>
+      <div className="text-center text-[9px] opacity-70 flex items-center justify-center gap-1">谢谢支持开源 <Heart className="w-3 h-3" /> @{p.authorName}</div>
     </div>
     <div className="px-6 pb-4 flex justify-center">
       <div className="h-6 w-[70%] opacity-70" style={{ background: "repeating-linear-gradient(90deg, #1d1d1d 0 2px, transparent 2px 5px)" }} />
@@ -826,7 +835,7 @@ const Pornhub: Variant = (p) => (
   <div {...base(p, "", { backgroundColor: "#000000", color: "#ffffff" })}>
     <div className="flex items-center justify-center gap-1 py-2.5 border-b border-white/10 relative">
       <span className="text-[22px] font-black text-orange-500 tracking-tight">Github</span>
-      <span className="text-[16px] font-black text-orange-500">▶</span>
+      <Play className="w-4 h-4 fill-current text-orange-500" />
       <span className="text-[22px] font-black text-orange-500 tracking-tight">hub</span>
       <span className="absolute right-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 border border-orange-500 text-orange-500 text-[8px] font-bold">HD</span>
       <span className="absolute left-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 bg-white/10 text-[8px] font-bold">1080P</span>
@@ -834,7 +843,7 @@ const Pornhub: Variant = (p) => (
     <div className="relative flex-1 flex items-center justify-center">
       <div className="absolute inset-0 bg-gradient-to-b from-zinc-900 to-black" />
       <div className="relative w-16 h-16 rounded-full bg-white/10 border border-white/20 flex items-center justify-center">
-        <span className="text-2xl text-white/80 ml-1">▶</span>
+        <Play className="w-8 h-8 fill-current text-white/80 ml-1" />
       </div>
       <div className="absolute bottom-0 inset-x-0 px-4 pb-3">
         <div className="flex justify-between text-[10px] mb-1">
@@ -861,17 +870,17 @@ const Pornhub: Variant = (p) => (
 const XPost: Variant = (p) => (
   <div {...base(p, "", { backgroundColor: "#ffffff", color: "#0f1419" })}>
     <div className="px-4 pt-4 flex items-center gap-3">
-      <div className="w-11 h-11 rounded-full bg-black text-white flex items-center justify-center text-lg font-black">𝕏</div>
+      <img src="/my-avatar.jpg" alt="author" crossOrigin="anonymous" className="w-11 h-11 rounded-full object-cover" referrerPolicy="no-referrer" />
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1 text-[13px] font-black truncate">GitHub Trending <span className="text-[#1d9bf0]">✓</span></div>
-        <div className="text-[11px] text-zinc-500">@githubtrending · 现在</div>
+        <div className="flex items-center gap-1 text-[13px] font-black truncate">{p.authorName} <BadgeCheck className="w-4 h-4 text-[#1d9bf0]" /></div>
+        <div className="text-[11px] text-zinc-500">@{p.authorName} · 现在</div>
       </div>
       <span className="text-zinc-400 text-lg">⋯</span>
     </div>
     <div className="px-4 py-3 flex-1 min-h-0 overflow-hidden">
-      <p className="text-[13px] leading-relaxed">今日 GitHub 爆火项目 Top{p.trendingData.length} 🔥</p>
+      <p className="text-[13px] leading-relaxed flex items-center gap-1">今日 GitHub 爆火项目 Top{p.trendingData.length} <Flame className="w-4 h-4" /></p>
       <div className="mt-2.5 space-y-1.5 font-mono text-[10px]">
-        {p.trendingData.slice(0, 8).map((item, idx) => (
+        {p.trendingData.slice(0, 15).map((item, idx) => (
           <div key={item.id || idx} className="flex gap-2">
             <span className="text-zinc-400">{idx + 1}.</span>
             <span className={`flex-1 truncate ${idx === 0 ? "font-semibold" : ""}`}>{item.title}</span>
@@ -885,7 +894,7 @@ const XPost: Variant = (p) => (
       </div>
     </div>
     <div className="px-4 py-3 border-t border-zinc-100 flex justify-around text-[10px] text-zinc-500">
-      <span>💬 {p.trendingData.length}</span><span>🔁 {formatStars(p.trendingData[0]?.stars || "")}</span><span className="text-[#f91880]">❤️ +{p.trendingData.reduce((s, i) => s + (parseInt(String(i.starsToday).replace(/,/g, ""), 10) || 0), 0).toLocaleString()}</span><span>📊 Top{p.trendingData.length}</span>
+      <span className="flex items-center gap-1"><MessageCircle className="w-3.5 h-3.5" /> {p.trendingData.length}</span><span className="flex items-center gap-1"><Repeat2 className="w-3.5 h-3.5" /> {formatStars(p.trendingData[0]?.stars || "")}</span><span className="flex items-center gap-1 text-[#f91880]"><Heart className="w-3.5 h-3.5" /> +{p.trendingData.reduce((s, i) => s + (parseInt(String(i.starsToday).replace(/,/g, ""), 10) || 0), 0).toLocaleString()}</span><span className="flex items-center gap-1"><BarChart2 className="w-3.5 h-3.5" /> Top{p.trendingData.length}</span>
     </div>
   </div>
 );
@@ -893,7 +902,7 @@ const XPost: Variant = (p) => (
 const Telegram: Variant = (p) => (
   <div {...base(p, "", { backgroundColor: "#e7ebf0", color: "#111111" })}>
     <div className="flex items-center gap-2.5 px-3 py-2.5 bg-[#2aabee] text-white">
-      <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#2aabee] font-black text-sm">✈</div>
+      <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#2aabee]"><Send className="w-4 h-4" /></div>
       <div className="flex-1">
         <div className="text-[12px] font-bold leading-none">GitHub Trending</div>
         <div className="text-[8px] opacity-80 mt-0.5">{p.trendingData.length} 条推送 · 刚刚</div>
@@ -912,7 +921,7 @@ const Telegram: Variant = (p) => (
     </div>
     <div className="px-3 py-2.5 bg-white flex items-center gap-2">
       <div className="flex-1 rounded-full bg-[#e7ebf0] px-3 py-1.5 text-[10px] text-zinc-500">消息</div>
-      <div className="w-7 h-7 rounded-full bg-[#2aabee] flex items-center justify-center text-white text-xs">➤</div>
+      <div className="w-7 h-7 rounded-full bg-[#2aabee] flex items-center justify-center text-white"><Send className="w-3.5 h-3.5" /></div>
     </div>
   </div>
 );
@@ -933,9 +942,9 @@ const Instagram: Variant = (p) => (
       </div>
     </div>
     <div className="px-3 py-2.5">
-      <div className="flex gap-3 text-xl"><span className="text-[#fd1d1d]">♥</span><span>💬</span><span>📤</span><span className="ml-auto">🔖</span></div>
+      <div className="flex gap-3 text-xl"><Heart className="w-5 h-5 text-[#fd1d1d]" /><MessageCircle className="w-5 h-5" /><Send className="w-5 h-5" /><Bookmark className="w-5 h-5 ml-auto" /></div>
       <div className="text-[11px] font-bold mt-1.5">{p.trendingData.reduce((s, i) => s + (parseInt(String(i.starsToday).replace(/,/g, ""), 10) || 0), 0).toLocaleString()} 次赞</div>
-      <div className="text-[10px] mt-0.5">今日 Top{p.trendingData.length} 榜单更新啦 🚀</div>
+      <div className="text-[10px] mt-0.5 flex items-center gap-1">今日 Top{p.trendingData.length} 榜单更新啦 <Rocket className="w-3.5 h-3.5" /></div>
       <div className="text-[10px] text-[#00376b] mt-0.5">#GitHub #Trending #开源 #开发者</div>
       <div className="text-[9px] text-zinc-400 mt-1">{p.timeText} · 查看全部 {p.trendingData.length} 条评论</div>
     </div>
@@ -947,7 +956,7 @@ const Onlyfans: Variant = (p) => (
     <div className="px-4 pt-4 flex items-center gap-3">
       <div className="w-12 h-12 rounded-full bg-[#0095f2] flex items-center justify-center text-xl font-black italic">G</div>
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1 text-[14px] font-black truncate">@{p.authorName} <span className="text-[#0095f2]">✓</span></div>
+        <div className="flex items-center gap-1 text-[14px] font-black truncate">@{p.authorName} <BadgeCheck className="w-4 h-4 text-[#0095f2]" /></div>
         <div className="text-[10px] text-zinc-500">{p.trendingData.length} 个开源项目 · 每日更新</div>
       </div>
     </div>

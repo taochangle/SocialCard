@@ -1,6 +1,9 @@
 import { chromium } from "playwright";
 import { dbService } from "./dbService.js";
 
+// 发布页面放宽的超时（单位 ms）
+const PUBLISH_TIMEOUT = 120000;
+
 export const platformService = {
   async login(platform: string) {
     let browser;
@@ -64,9 +67,10 @@ export const platformService = {
         geolocation: { longitude: 116.4074, latitude: 39.9042 }
       });
       const page = await context.newPage();
+      page.setDefaultTimeout(PUBLISH_TIMEOUT);
 
       if (platform === "douyin") {
-        await page.goto("https://creator.douyin.com/creator-micro/content/upload?default-tab=3", { waitUntil: 'networkidle' });
+        await page.goto("https://creator.douyin.com/creator-micro/content/upload?default-tab=3", { waitUntil: "networkidle", timeout: PUBLISH_TIMEOUT });
         
         // 3. Upload images sequentially
         console.log("[Publish] Uploading images sequentially...");
@@ -95,7 +99,7 @@ export const platformService = {
         // 6. 填充标题 (格式: YYYY-MM-DD)
         console.log("[Publish] Filling title...");
         try {
-          const titleInput = await page.waitForSelector('.semi-input.semi-input-default', { timeout: 10000 });
+          const titleInput = await page.waitForSelector('.semi-input.semi-input-default');
           await titleInput.fill(publishDate);
         } catch {
           await page.getByPlaceholder('添加作品标题').fill(publishDate);
@@ -136,7 +140,7 @@ export const platformService = {
           
           // Wait for sidesheet
           console.log("[Publish] Waiting for music sidesheet...");
-          const sideSheet = await page.waitForSelector('.semi-sidesheet-inner-wrap', { timeout: 10000 });
+          const sideSheet = await page.waitForSelector('.semi-sidesheet-inner-wrap');
           
           // Click "热门榜" tab
           const hotTab = await sideSheet.waitForSelector('div:has-text("热门榜")');
@@ -151,7 +155,7 @@ export const platformService = {
           await musicCard.hover();
           
           const useBtnSelector = 'button:has-text("使用"), .music-item-use-btn';
-          await page.waitForSelector(useBtnSelector, { state: 'visible', timeout: 5000 });
+          await page.waitForSelector(useBtnSelector, { state: 'visible' });
           const useBtn = await page.locator(useBtnSelector).first();
           await useBtn.click();
           console.log("[Publish] Music selected successfully.");
@@ -174,7 +178,7 @@ export const platformService = {
         // 等待跳转并点击“审核中”
         try {
           console.log("[Publish] Waiting for management page...");
-          await page.waitForURL("**/creator-micro/content/manage**", { timeout: 30000 });
+          await page.waitForURL("**/creator-micro/content/manage**");
           const auditTab = await page.getByText('审核中').first();
           await auditTab.click();
           await page.waitForTimeout(2000);
