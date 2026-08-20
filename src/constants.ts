@@ -35,6 +35,7 @@ export const CARD_STYLES: { id: CardStyle; name: string; desc: string }[] = [
   { id: "telegram", name: "Telegram", desc: "蓝色频道" },
   { id: "instagram", name: "Instagram", desc: "帖子卡片" },
   { id: "onlyfans", name: "OnlyFans", desc: "订阅解锁" },
+  { id: "ios", name: "iOS 风格", desc: "锁屏+小组件" },
 ];
 
 export const TEMPLATES: Template[] = [
@@ -179,6 +180,17 @@ export const TEMPLATES: Template[] = [
       cardBg: "#000000",
       textColor: "#FFFFFF",
       accentColor: "#E4E4E7",
+    },
+  },
+  {
+    id: "ios-space",
+    name: "iOS 深空",
+    desc: "锁屏深蓝",
+    theme: {
+      outerBg: "#1E3A8A",
+      cardBg: "#0F172A",
+      textColor: "#F8FAFC",
+      accentColor: "#7DD3FC",
     },
   },
 ];

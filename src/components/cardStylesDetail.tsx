@@ -964,6 +964,71 @@ const Onlyfans: Variant = (p) => (
   </div>
 );
 
+const Ios: Variant = (p) => (
+  <div
+    {...base(p, "", {
+      background: "linear-gradient(165deg, #101a3f 0%, #3149c9 55%, #7a2fd0 100%)",
+      color: "#ffffff",
+    })}
+  >
+    <div className="flex items-center justify-between px-6 pt-3 text-[10px] font-semibold">
+      <span className="font-bold">GitHub Trending</span>
+      <span className="flex items-center gap-1.5">
+        5G
+        <span className="inline-block w-5 h-2.5 border border-white/70 rounded-[3px] relative">
+          <span className="absolute inset-0.5 bg-white/80 rounded-[1px]" />
+          <span className="absolute -right-[3px] top-[3px] w-[2px] h-[4px] bg-white/70 rounded-r" />
+        </span>
+      </span>
+    </div>
+    <div className="px-5 pt-4">
+      <div className="rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 p-3 shadow-lg">
+        <div className="flex items-start gap-3">
+          <img {...avatarFor(p.projectName, p.avatarUrl)} className="w-9 h-9 rounded-[10px] object-cover shrink-0" />
+          <div className="min-w-0 flex-1">
+            <div className="text-[11px] font-semibold mt-1 truncate flex items-center gap-1">
+              {p.projectName.split("/")[1] || p.projectName} <Flame className="w-3 h-3" />
+            </div>
+            <div className="text-[9px] leading-snug opacity-80 mt-0.5 line-clamp-2">
+              {p.keywordList.slice(0, 3).join(" · ")} · 今日 +{formatStars(p.starsToday)} 星
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div className="flex-1 px-5 pt-3 pb-3">
+      <div className="w-full h-full rounded-[1.75rem] bg-white/10 backdrop-blur-md border border-white/20 p-4 flex flex-col shadow-lg">
+        <div className="text-[9px] font-black uppercase tracking-widest opacity-60">Widget · Project #{p.currentIndex + 1}</div>
+        <h2 className="text-lg font-bold mt-1">{p.projectName.split("/")[1] || p.projectName}</h2>
+        <div className="font-mono text-[9px] opacity-60 mt-0.5">{p.projectUrl.split("/")[0]} · ★ {formatStars(p.stars)}</div>
+        <div className="flex gap-2 my-3">
+          <div className="flex-1 rounded-xl bg-white/10 border border-white/15 p-2 text-center">
+            <div className="text-[8px] opacity-60">STARS</div>
+            <div className="text-sm font-bold font-mono">{formatStars(p.stars)}</div>
+          </div>
+          <div className="flex-1 rounded-xl bg-white/10 border border-white/15 p-2 text-center">
+            <div className="text-[8px] opacity-60">TODAY</div>
+            <div className="text-sm font-bold font-mono text-yellow-300">+{formatStars(p.starsToday)}</div>
+          </div>
+          <div className="flex-1 rounded-xl bg-white/10 border border-white/15 p-2 text-center">
+            <div className="text-[8px] opacity-60">RANK</div>
+            <div className="text-sm font-bold font-mono">#{p.currentIndex + 1}</div>
+          </div>
+        </div>
+        <div className="flex-1 min-h-0 overflow-hidden rounded-xl bg-white/[0.07] border border-white/10 p-3">
+          <Summary p={p} className="text-[11px] leading-relaxed line-clamp-[10]" />
+        </div>
+        <div className="flex gap-1.5 mt-3 flex-wrap">
+          {p.keywordList.slice(0, 6).map((tag, i) => (
+            <span key={i} className="px-2 py-0.5 rounded-full bg-white/15 text-[9px]">#{tag}</span>
+          ))}
+        </div>
+      </div>
+    </div>
+    <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-28 h-1 rounded-full bg-white/40" />
+  </div>
+);
+
 export const DetailVariants: Record<CardStyle, Variant> = {
   classic: Classic,
   poster: Poster,
@@ -999,4 +1064,5 @@ export const DetailVariants: Record<CardStyle, Variant> = {
   telegram: Telegram,
   instagram: Instagram,
   onlyfans: Onlyfans,
+  ios: Ios,
 };

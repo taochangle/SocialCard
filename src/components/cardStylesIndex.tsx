@@ -1,5 +1,5 @@
 import React from "react";
-import { Star, Flame, Zap, Brain, Rocket, BookOpen, Heart, MessageCircle, Repeat2, BarChart2, Send, Bookmark, Play, BadgeCheck, Lock } from "lucide-react";
+import { Star, Flame, Zap, Brain, Rocket, BookOpen, Heart, MessageCircle, Repeat2, BarChart2, Send, Bookmark, Play, BadgeCheck, Lock, Camera, Flashlight } from "lucide-react";
 import { CardStyle } from "../types";
 import { IndexStyleProps, pad, formatStars } from "./cardStyleProps";
 
@@ -990,6 +990,59 @@ const Onlyfans: Variant = (p) => (
   </div>
 );
 
+const Ios: Variant = (p) => (
+  <div
+    {...base(p, "", {
+      background: "linear-gradient(165deg, #101a3f 0%, #3149c9 55%, #7a2fd0 100%)",
+      color: "#ffffff",
+    })}
+  >
+    <div className="flex items-center justify-between px-6 pt-3 text-[10px] font-semibold">
+      <span className="font-bold">GitHub Trending</span>
+      <span className="flex items-center gap-1.5">
+        5G
+        <span className="inline-block w-5 h-2.5 border border-white/70 rounded-[3px] relative">
+          <span className="absolute inset-0.5 bg-white/80 rounded-[1px]" />
+          <span className="absolute -right-[3px] top-[3px] w-[2px] h-[4px] bg-white/70 rounded-r" />
+        </span>
+      </span>
+    </div>
+    <div className="px-7 mt-1 flex items-center gap-1.5">
+      <Lock className="w-3 h-3 opacity-80" />
+      <span className="text-[11px] opacity-80">{p.displayDate}</span>
+    </div>
+    <div className="px-7 mt-2">
+      <div className="text-[54px] font-thin leading-none tracking-tight">{p.timeText}</div>
+      <div className="text-[12px] opacity-75 mt-1">{p.displayDate}</div>
+    </div>
+    <div className="flex-1 px-5 pt-4 pb-3">
+      <div className="w-full h-full rounded-[1.75rem] bg-white/10 backdrop-blur-md border border-white/20 p-4 flex flex-col shadow-lg">
+        <div className="flex items-center justify-between mb-2.5">
+          <div className="flex items-center gap-2">
+            <img src="/my-avatar.jpg" alt="author" crossOrigin="anonymous" className="w-6 h-6 rounded-md object-cover" referrerPolicy="no-referrer" />
+            <span className="text-[11px] font-bold opacity-90">GitHub Trending</span>
+          </div>
+          <span className="text-[9px] font-mono opacity-60">Top {Math.min(p.trendingData.length, 10)}</span>
+        </div>
+        <div className="flex-1 flex flex-col justify-start gap-2 overflow-hidden">
+          {p.trendingData.slice(0, 10).map((item, idx) => (
+            <div key={item.id || idx} className="flex items-center gap-2 text-[11px]">
+              <span className="font-mono text-[10px] opacity-50">{pad(idx)}</span>
+              <span className={`flex-1 truncate ${idx === 0 ? "font-semibold" : ""}`}>{item.title}</span>
+              <span className={`text-[10px] font-mono ${idx === 0 ? "text-yellow-300" : "text-yellow-300/80"}`}>{formatStars(item.stars || "")}★</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+    <div className="px-10 pb-6 flex items-center justify-between">
+      <div className="w-10 h-10 rounded-full bg-white/15 backdrop-blur border border-white/20 flex items-center justify-center"><Flashlight className="w-4 h-4" /></div>
+      <div className="w-10 h-10 rounded-full bg-white/15 backdrop-blur border border-white/20 flex items-center justify-center"><Camera className="w-4 h-4" /></div>
+    </div>
+    <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-28 h-1 rounded-full bg-white/40" />
+  </div>
+);
+
 export const IndexVariants: Record<CardStyle, Variant> = {
   classic: Classic,
   poster: Poster,
@@ -1025,4 +1078,5 @@ export const IndexVariants: Record<CardStyle, Variant> = {
   telegram: Telegram,
   instagram: Instagram,
   onlyfans: Onlyfans,
+  ios: Ios,
 };

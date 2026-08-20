@@ -60,4 +60,5 @@ export type CardStyle =
   | "x"
   | "telegram"
   | "instagram"
-  | "onlyfans";
+  | "onlyfans"
+  | "ios";
